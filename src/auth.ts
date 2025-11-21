@@ -1,40 +1,70 @@
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 import { getUser } from "./services/getUser";
 import { loginUser } from "./services/loginUser";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
-  providers: [GitHub],
+  providers: [GitHub, Google],
   callbacks: {
-    async signIn({ user }) {
-      if (!user) return false;
-      const data = await loginUser({ email: user.email! });
-      if (!data) return false;
-      user.id = data.id;
-      return true;
+    async signIn({ user, account }) {
+      try {
+        if (!user || !user.email) {
+          console.error("No user or email provided in signIn callback");
+          return false;
+        }
+
+        const data = await loginUser({
+          email: user.email,
+          provider: account!.provider,
+        });
+        if (!data) {
+          console.error("Failed to login user - no data returned");
+          return "/unauthorized";
+        }
+
+        user.id = data.id;
+        return true;
+      } catch (error) {
+        console.error("Error in signIn callback:", error);
+        return false;
+      }
     },
     async jwt({ token, user }) {
-      if (user) {
-        const data = await getUser({ id: user.id! });
-        if (!data) return token;
-        token.user = {
-          firstName: data.first_name,
-          lastName: data.last_name,
-          email: data.email,
-          id: data.id,
-        };
+      try {
+        if (user && user.id) {
+          const data = await getUser({ id: user.id });
+          if (!data) {
+            console.warn("Failed to fetch user data for JWT token");
+            return token;
+          }
+          token.user = {
+            firstName: data.first_name,
+            lastName: data.last_name,
+            email: data.email,
+            id: data.id,
+          };
+        }
+        return token;
+      } catch (error) {
+        console.error("Error in jwt callback:", error);
+        return token;
       }
-      return token;
     },
     async session({ session, token }) {
-      if (token && token.user) {
-        session.user.id = token.user.id;
-        session.user.firstName = token.user.firstName;
-        session.user.lastName = token.user.lastName;
-        session.user.email = token.user.email;
+      try {
+        if (token && token.user) {
+          session.user.id = token.user.id;
+          session.user.firstName = token.user.firstName;
+          session.user.lastName = token.user.lastName;
+          session.user.email = token.user.email;
+        }
+        return session;
+      } catch (error) {
+        console.error("Error in session callback:", error);
+        return session;
       }
-      return session;
     },
   },
 });
