@@ -1,12 +1,11 @@
 "use server";
 import {
-  GetMarketParams,
   GetMarketData,
+  GetMarketParams,
 } from "@/constants/types/api/gecko/getMarketTypes";
 
 export async function getMarket(
-  data: GetMarketParams,
-  ttl: number
+  data: GetMarketParams
 ): Promise<GetMarketData[] | undefined> {
   const params = new URLSearchParams({
     per_page: data.per_page.toString(),
@@ -20,7 +19,6 @@ export async function getMarket(
     `${process.env.COINGECKO_API_URL}/coins/markets?${params.toString()}`,
     {
       method: "GET",
-      next: { revalidate: ttl },
     }
   );
   // For debugging cache hit or miss

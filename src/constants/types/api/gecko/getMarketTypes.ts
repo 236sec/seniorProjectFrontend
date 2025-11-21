@@ -3,7 +3,7 @@ export interface GetMarketParams {
   page: number;
   vs_currency?: string;
   include_tokens?: string;
-  precision?: number;
+  precision?: string;
 }
 
 export interface GetMarketData {
@@ -13,5 +13,7 @@ export interface GetMarketData {
   current_price: number;
   market_cap: number;
   total_volume: number;
-  price_change_percentage_24h_in_currency: number;
+  market_cap_rank: number;
+  image: string;
+  price_change_percentage_24h: number;
 }

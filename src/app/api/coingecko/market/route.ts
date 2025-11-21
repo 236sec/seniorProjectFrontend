@@ -1,4 +1,5 @@
 import { getMarket } from "@/services/gecko/getMarket";
+import { cacheLife } from "next/dist/server/use-cache/cache-life";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -7,8 +8,14 @@ const requestSchema = z.object({
   page: z.number().min(1),
   vs_currency: z.string(),
   include_tokens: z.string(),
-  precision: z.number().min(1).max(18),
+  precision: z.string(),
 });
+
+async function getData(params: Parameters<typeof getMarket>[0], ttl: number) {
+  "use cache";
+  cacheLife({ stale: ttl, revalidate: ttl }); // Set cache life to 300 seconds (5 minutes)
+  return await getMarket(params);
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -22,7 +29,7 @@ export async function GET(req: Request) {
     page: Number(page),
     vs_currency,
     include_tokens,
-    precision: Number(precision),
+    precision,
   });
   if (!parsed.success) {
     return NextResponse.json(
@@ -30,7 +37,7 @@ export async function GET(req: Request) {
       { status: 400 }
     );
   }
-  const res = await getMarket(parsed.data, 10);
+  const res = await getData(parsed.data, 300);
   if (!res) {
     return NextResponse.json(
       { error: "Failed to fetch market data" },
