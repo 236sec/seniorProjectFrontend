@@ -1,4 +1,5 @@
 import SignInButton from "@/components/signInButton";
+import TableMarket from "@/components/tableMarket";
 import { ModeToggle } from "@/components/themeButton";
 import Image from "next/image";
 
@@ -8,6 +9,7 @@ export default function Home() {
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         <SignInButton />
         <ModeToggle />
+        <TableMarket />
         <Image
           className="dark:invert"
           src="/next.svg"
