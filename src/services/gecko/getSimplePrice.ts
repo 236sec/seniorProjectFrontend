@@ -4,6 +4,7 @@ import {
   GetSimplePriceData,
   GetSimplePriceParams,
 } from "@/constants/types/api/gecko/getSimplePriceTypes";
+import { env } from "@/env";
 
 export async function getSimplePrice(
   data: GetSimplePriceParams
@@ -21,8 +22,9 @@ export async function getSimplePrice(
     precision: data.precision,
   });
 
+  const coingeckoApiUrl = env.COINGECKO_API_URL;
   const response = await fetch(
-    `${process.env.COINGECKO_API_URL}/simple/price?${params.toString()}`,
+    `${coingeckoApiUrl}/simple/price?${params.toString()}`,
     {
       method: "GET",
     }

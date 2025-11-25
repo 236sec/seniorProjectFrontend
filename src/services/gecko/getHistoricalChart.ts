@@ -3,6 +3,7 @@ import {
   GetHistoricalChartData,
   GetHistoricalChartParams,
 } from "@/constants/types/api/gecko/getHistoricalChartTypes";
+import { env } from "@/env";
 
 export async function getHistoricalChart(
   data: GetHistoricalChartParams
@@ -14,10 +15,9 @@ export async function getHistoricalChart(
     precision: data.precision || "2",
   });
 
+  const coingeckoApiUrl = env.COINGECKO_API_URL;
   const response = await fetch(
-    `${process.env.COINGECKO_API_URL}/coins/${
-      data.id
-    }/market_chart?${params.toString()}`,
+    `${coingeckoApiUrl}/coins/${data.id}/market_chart?${params.toString()}`,
     {
       method: "GET",
     }

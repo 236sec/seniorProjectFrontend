@@ -2,16 +2,13 @@ import {
   GetUserParams,
   GetUserResponse,
 } from "@/constants/types/api/getUserTypes";
+import { env } from "@/env";
 
 export async function getUser(
   data: GetUserParams
 ): Promise<GetUserResponse | undefined> {
   try {
-    const backendUrl = process.env.BACKEND_URL;
-    if (!backendUrl) {
-      console.error("BACKEND_URL environment variable is not set");
-      return undefined;
-    }
+    const backendUrl = env.BACKEND_URL;
 
     const response = await fetch(`${backendUrl}/users/${data.id}`, {
       method: "GET",

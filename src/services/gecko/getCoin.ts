@@ -4,6 +4,7 @@ import {
   GetCoinData,
   GetCoinParams,
 } from "@/constants/types/api/gecko/getCoinTypes";
+import { env } from "@/env";
 
 export async function getCoin(
   data: GetCoinParams
@@ -19,8 +20,9 @@ export async function getCoin(
     dex_pair_format: data.dex_pair_format || "contract_address",
   });
 
+  const coingeckoApiUrl = env.COINGECKO_API_URL;
   const response = await fetch(
-    `${process.env.COINGECKO_API_URL}/coins/${data.id}?${params.toString()}`,
+    `${coingeckoApiUrl}/coins/${data.id}?${params.toString()}`,
     {
       method: "GET",
     }

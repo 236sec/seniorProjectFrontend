@@ -2,16 +2,13 @@ import {
   LoginUserRequest,
   LoginUserResponse,
 } from "@/constants/types/api/loginUserTypes";
+import { env } from "@/env";
 
 export async function loginUser(
   data: LoginUserRequest
 ): Promise<LoginUserResponse | undefined> {
   try {
-    const backendUrl = process.env.BACKEND_URL;
-    if (!backendUrl) {
-      console.error("BACKEND_URL environment variable is not set");
-      return undefined;
-    }
+    const backendUrl = env.BACKEND_URL;
 
     const response = await fetch(`${backendUrl}/users/login`, {
       method: "POST",

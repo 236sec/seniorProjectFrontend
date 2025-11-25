@@ -3,6 +3,7 @@ import {
   GetMarketData,
   GetMarketParams,
 } from "@/constants/types/api/gecko/getMarketTypes";
+import { env } from "@/env";
 
 export async function getMarket(
   data: GetMarketParams
@@ -15,8 +16,9 @@ export async function getMarket(
     precision: (data.precision || 2).toString(),
   });
 
+  const coingeckoApiUrl = env.COINGECKO_API_URL;
   const response = await fetch(
-    `${process.env.COINGECKO_API_URL}/coins/markets?${params.toString()}`,
+    `${coingeckoApiUrl}/coins/markets?${params.toString()}`,
     {
       method: "GET",
     }
