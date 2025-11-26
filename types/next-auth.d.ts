@@ -11,7 +11,7 @@ declare module "next-auth" {
       firstName: string;
       lastName: string;
       email: string;
-      id: string;
+      _id: string;
     } & DefaultSession["user"];
   }
 }

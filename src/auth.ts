@@ -24,7 +24,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           return "/unauthorized";
         }
 
-        user.id = data.id;
+        user.id = data._id;
         return true;
       } catch (error) {
         console.error("Error in signIn callback:", error);
@@ -43,7 +43,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             firstName: data.first_name,
             lastName: data.last_name,
             email: data.email,
-            id: data.id,
+            _id: data._id,
           };
         }
         return token;
@@ -55,7 +55,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       try {
         if (token && token.user) {
-          session.user.id = token.user.id;
+          session.user._id = token.user._id;
           session.user.firstName = token.user.firstName;
           session.user.lastName = token.user.lastName;
           session.user.email = token.user.email;

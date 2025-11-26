@@ -3,7 +3,7 @@ export interface GetUserParams {
 }
 
 export interface GetUserResponse {
-  id: string;
+  _id: string;
   email: string;
   first_name: string;
   last_name: string;
