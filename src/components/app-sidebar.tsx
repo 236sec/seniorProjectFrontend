@@ -14,13 +14,10 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useSession } from "next-auth/react";
+import SignInButton from "./signInButton";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   head: {
     name: "My Application",
     url: "/",
@@ -52,6 +49,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   // Add isActive based on current pathname
   const navMainWithActive = data.navMain.map((item) => ({
@@ -68,7 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={navMainWithActive} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {session ? <NavUser user={session.user} /> : <SignInButton />}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

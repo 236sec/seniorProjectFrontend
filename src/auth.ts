@@ -40,8 +40,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             return token;
           }
           token.user = {
-            firstName: data.first_name,
-            lastName: data.last_name,
+            first_name: data.first_name,
+            last_name: data.last_name,
             email: data.email,
             _id: data._id,
           };
@@ -56,8 +56,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       try {
         if (token && token.user) {
           session.user._id = token.user._id;
-          session.user.firstName = token.user.firstName;
-          session.user.lastName = token.user.lastName;
+          session.user.first_name = token.user.first_name;
+          session.user.last_name = token.user.last_name;
           session.user.email = token.user.email;
         }
         return session;
