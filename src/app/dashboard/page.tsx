@@ -1,20 +1,22 @@
 import { auth } from "@/auth";
 import { getUser } from "@/services/getUser";
+import { Suspense } from "react";
+import { Dashboard } from "./dsahboard";
 
-async function getUserData(userId: string) {
-  return getUser({ id: userId });
+async function getData(id: string) {
+  return getUser({ id });
 }
 
 export default async function Page() {
   const session = await auth();
-
-  // const userData = getUserData(session!.user._id);
-
+  const userDataPromised = getData(session!.user._id);
   return (
     <>
       <h1>Dashboard</h1>
       <h2>Welcome to your dashboard!</h2>
-      {/* <DashboardData userData={userData} /> */}
+      <Suspense fallback={<div>Loading dashboard...</div>}>
+        <Dashboard userDataPromised={userDataPromised} />
+      </Suspense>
     </>
   );
 }
