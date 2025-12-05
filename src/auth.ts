@@ -8,6 +8,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   providers: [GitHub, Google],
   callbacks: {
+    authorized: async ({ auth }) => {
+      return !!auth;
+    },
     async signIn({ user, account }) {
       try {
         if (!user || !user.email) {
