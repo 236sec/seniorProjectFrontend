@@ -1,4 +1,5 @@
 "use client";
+import { AddressBalanceChecker } from "@/components/dashboard/address-balance-checker";
 import { WalletDropdown } from "@/components/wallet-dropdown";
 import { GetUserResponse } from "@/constants/types/api/getUserTypes";
 import { GetWalletResponse } from "@/constants/types/api/getWalletTypes";
@@ -48,22 +49,29 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
 
   return (
     <div className="space-y-4">
-      <WalletDropdown
-        walletData={userData.wallets}
-        selectedWallet={selectedWallet}
-        setSelectedWallet={setSelectedWallet}
-      />
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Your Wallets</h3>
+            <WalletDropdown
+                walletData={userData.wallets}
+                selectedWallet={selectedWallet}
+                setSelectedWallet={setSelectedWallet}
+            />
+             {loading && <div>Loading wallet data...</div>}
 
-      {loading && <div>Loading wallet data...</div>}
-
-      {!loading && walletData && (
-        <div className="border rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-2">Wallet Details</h3>
-          <pre className="text-sm bg-muted p-2 rounded">
-            {JSON.stringify(walletData, null, 2)}
-          </pre>
+            {!loading && walletData && (
+                <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-2">Wallet Details</h3>
+                <pre className="text-sm bg-muted p-2 rounded overflow-auto max-h-[400px]">
+                    {JSON.stringify(walletData, null, 2)}
+                </pre>
+                </div>
+            )}
         </div>
-      )}
+        <div>
+            <AddressBalanceChecker />
+        </div>
+      </div>
     </div>
   );
 }
