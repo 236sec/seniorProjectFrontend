@@ -2,10 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  AddressBalancesResponse,
-  getAddressBalances,
-} from "@/services/alchemy/getBalances";
+import { env } from "@/env";
+import { AddressBalancesResponse } from "@/services/alchemy/getBalances";
 import { Loader2, Search } from "lucide-react";
 import { useState } from "react";
 
@@ -27,7 +25,20 @@ export function AddressBalanceChecker() {
         throw new Error("Invalid Ethereum address format");
       }
 
-      const data = await getAddressBalances(address);
+      const response = await fetch(
+        `${env.NEXT_PUBLIC_FRONTEND_URL}/api/alchemy/balances/${address}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch balances");
+      }
+
+      const data: AddressBalancesResponse = await response.json();
       setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch balances");
@@ -73,21 +84,30 @@ export function AddressBalanceChecker() {
 
       {result && (
         <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-3 bg-muted rounded-md">
-              <p className="text-xs text-muted-foreground font-medium uppercase">
-                Native Balance
-              </p>
-              <p className="text-xl font-bold">{parseFloat(result.nativeBalance).toFixed(4)} ETH</p>
+          {/* Native Balances by Network */}
+          {result.nativeBalances.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Native Balances</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {result.nativeBalances.map((native) => (
+                  <div key={native.network} className="p-3 bg-muted rounded-md">
+                    <p className="text-xs text-muted-foreground font-medium uppercase">
+                      {native.network}
+                    </p>
+                    <p className="text-lg font-bold">
+                      {parseFloat(native.balance).toFixed(4)} ETH
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="p-3 bg-muted rounded-md">
-              <p className="text-xs text-muted-foreground font-medium uppercase">
-                Token Count
-              </p>
-              <p className="text-xl font-bold">
-                {result.tokenBalances.length}
-              </p>
-            </div>
+          )}
+
+          <div className="p-3 bg-muted rounded-md">
+            <p className="text-xs text-muted-foreground font-medium uppercase">
+              Token Count
+            </p>
+            <p className="text-xl font-bold">{result.tokenBalances.length}</p>
           </div>
 
           <div className="space-y-2">
@@ -96,22 +116,31 @@ export function AddressBalanceChecker() {
               <p className="text-sm text-muted-foreground">No tokens found.</p>
             ) : (
               <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
-                {result.tokenBalances.map((token) => (
+                {result.tokenBalances.map((token, index) => (
                   <div
-                    key={token.contractAddress}
+                    key={`${token.contractAddress}-${token.network}-${index}`}
                     className="flex justify-between items-center p-2 hover:bg-muted/50 rounded-md border text-sm transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                        {token.logo ? (
-                           // eslint-disable-next-line @next/next/no-img-element
-                           <img src={token.logo} alt={token.symbol} className="w-6 h-6 rounded-full" />
-                        ) : (
-                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold">
-                                {token.symbol.slice(0, 2)}
-                            </div>
-                        )}
+                      {token.logo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={token.logo}
+                          alt={token.symbol}
+                          className="w-6 h-6 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold">
+                          {token.symbol.slice(0, 2)}
+                        </div>
+                      )}
                       <div className="flex flex-col">
-                        <span className="font-medium">{token.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{token.name}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded">
+                            {token.network}
+                          </span>
+                        </div>
                         <span className="text-xs text-muted-foreground">
                           {token.symbol}
                         </span>
@@ -119,7 +148,9 @@ export function AddressBalanceChecker() {
                     </div>
                     <div className="text-right">
                       <div className="font-mono font-medium">
-                        {parseFloat(token.balance).toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                        {parseFloat(token.balance).toLocaleString(undefined, {
+                          maximumFractionDigits: 4,
+                        })}
                       </div>
                     </div>
                   </div>
