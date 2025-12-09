@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/coins/images/**",
       },
+      {
+        protocol: "https",
+        hostname: "static.alchemyapi.io",
+        port: "",
+        pathname: "/images/assets/**",
+      },
     ],
   },
 };
