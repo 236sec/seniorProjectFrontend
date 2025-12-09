@@ -1,8 +1,7 @@
 import { getAddressBalances } from "@/services/alchemy/getBalances";
-import { NextRequest } from "next/server";
 
 export async function GET(
-  request: NextRequest,
+  request: Request,
   { params }: { params: Promise<{ address: string }> }
 ): Promise<Response> {
   try {
@@ -16,13 +15,18 @@ export async function GET(
       );
     }
 
-    const data = await getAddressBalances(address);
+    const data = await getAddressBalances({ address });
+
+    if (!data) {
+      return Response.json(
+        { error: "Failed to fetch address balances" },
+        { status: 500 }
+      );
+    }
+
     return Response.json(data, { status: 200 });
   } catch (error) {
-    console.error("Error in balances API route:", error);
-    return Response.json(
-      { error: "Failed to fetch address balances" },
-      { status: 500 }
-    );
+    console.error("Error in GET /api/alchemy/balances/[address]:", error);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }

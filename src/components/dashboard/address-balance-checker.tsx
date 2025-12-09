@@ -2,15 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GetAddressBalancesResponse } from "@/constants/types/api/alchemy/getAddressBalancesTypes";
 import { env } from "@/env";
-import { AddressBalancesResponse } from "@/services/alchemy/getBalances";
 import { Loader2, Search } from "lucide-react";
 import { useState } from "react";
 
 export function AddressBalanceChecker() {
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<AddressBalancesResponse | null>(null);
+  const [result, setResult] = useState<GetAddressBalancesResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async () => {
@@ -38,7 +38,7 @@ export function AddressBalanceChecker() {
         throw new Error(errorData.error || "Failed to fetch balances");
       }
 
-      const data: AddressBalancesResponse = await response.json();
+      const data: GetAddressBalancesResponse = await response.json();
       setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch balances");
@@ -84,8 +84,8 @@ export function AddressBalanceChecker() {
 
       {result && (
         <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          {/* Native Balances by Network */}
-          {result.nativeBalances.length > 0 && (
+          {/* Native Balances */}
+          {result.nativeBalances && result.nativeBalances.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Native Balances</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -103,29 +103,38 @@ export function AddressBalanceChecker() {
             </div>
           )}
 
-          <div className="p-3 bg-muted rounded-md">
-            <p className="text-xs text-muted-foreground font-medium uppercase">
-              Token Count
-            </p>
-            <p className="text-xl font-bold">{result.tokenBalances.length}</p>
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="p-3 bg-muted rounded-md">
+              <p className="text-xs text-muted-foreground font-medium uppercase">
+                Total Tokens
+              </p>
+              <p className="text-xl font-bold">{result.totalTokens}</p>
+            </div>
+            <div className="p-3 bg-muted rounded-md">
+              <p className="text-xs text-muted-foreground font-medium uppercase">
+                With Metadata
+              </p>
+              <p className="text-xl font-bold">{result.tokensWithMetadata}</p>
+            </div>
           </div>
 
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Token Holdings</h4>
-            {result.tokenBalances.length === 0 ? (
+            {result.balances.length === 0 ? (
               <p className="text-sm text-muted-foreground">No tokens found.</p>
             ) : (
               <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
-                {result.tokenBalances.map((token, index) => (
+                {result.balances.map((token, index) => (
                   <div
                     key={`${token.contractAddress}-${token.network}-${index}`}
                     className="flex justify-between items-center p-2 hover:bg-muted/50 rounded-md border text-sm transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      {token.logo ? (
+                      {token.logo || token.token?.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={token.logo}
+                          src={token.logo || token.token?.image || ""}
                           alt={token.symbol}
                           className="w-6 h-6 rounded-full"
                         />
@@ -148,9 +157,12 @@ export function AddressBalanceChecker() {
                     </div>
                     <div className="text-right">
                       <div className="font-mono font-medium">
-                        {parseFloat(token.balance).toLocaleString(undefined, {
-                          maximumFractionDigits: 4,
-                        })}
+                        {parseFloat(token.balanceFormatted).toLocaleString(
+                          undefined,
+                          {
+                            maximumFractionDigits: 4,
+                          }
+                        )}
                       </div>
                     </div>
                   </div>
