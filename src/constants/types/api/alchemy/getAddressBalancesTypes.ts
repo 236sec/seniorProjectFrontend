@@ -21,7 +21,11 @@ export interface TokenBalanceData {
     id: string;
     symbol: string;
     name: string;
-    image: string;
+    image: {
+      thumb: string;
+      small: string;
+      large: string;
+    };
   } | null;
 }
 

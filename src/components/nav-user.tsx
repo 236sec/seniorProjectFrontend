@@ -27,15 +27,15 @@ import {
 } from "@/components/ui/sidebar";
 import { signOut } from "next-auth/react";
 
-export function NavUser({
-  user,
-}: {
+export interface NavUserProps {
   user: {
     name: string;
     email: string;
     image?: string | null | undefined;
   };
-}) {
+}
+
+export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar();
 
   return (

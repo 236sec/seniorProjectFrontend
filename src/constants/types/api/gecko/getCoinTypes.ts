@@ -32,6 +32,6 @@ export interface GetCoinData {
   sentiment_votes_up_percentage: number;
   sentiment_votes_down_percentage: number;
   market_cap_rank: number;
-  market_data: any;
+  // market_data: any;
   last_updated: string;
 }

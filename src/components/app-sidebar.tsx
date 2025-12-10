@@ -6,7 +6,7 @@ import * as React from "react";
 
 import { NavHead } from "@/components/nav-head";
 import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
+import { NavUser, NavUserProps } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -66,7 +66,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={navMainWithActive} />
       </SidebarContent>
       <SidebarFooter>
-        {session ? <NavUser user={session.user} /> : <SignInButton />}
+        {session ? (
+          <NavUser user={session.user as NavUserProps["user"]} />
+        ) : (
+          <SignInButton />
+        )}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

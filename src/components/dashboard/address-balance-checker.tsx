@@ -134,7 +134,7 @@ export function AddressBalanceChecker() {
                       {token.logo || token.token?.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={token.logo || token.token?.image || ""}
+                          src={token.logo || token.token?.image?.thumb || ""}
                           alt={token.symbol}
                           className="w-6 h-6 rounded-full"
                         />
