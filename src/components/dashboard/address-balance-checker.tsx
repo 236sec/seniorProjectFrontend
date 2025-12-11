@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GetAddressBalancesResponse } from "@/constants/types/api/alchemy/getAddressBalancesTypes";
-import { env } from "@/env";
+import { getBaseUrl } from "@/env";
 import { Loader2, Search } from "lucide-react";
 import { useState } from "react";
 
@@ -26,7 +26,7 @@ export function AddressBalanceChecker() {
       }
 
       const response = await fetch(
-        `${env.NEXT_PUBLIC_FRONTEND_URL}/api/alchemy/balances/${address}`,
+        `${getBaseUrl()}/api/alchemy/balances/${address}`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },

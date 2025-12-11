@@ -3,7 +3,7 @@ import { AddressBalanceChecker } from "@/components/dashboard/address-balance-ch
 import { WalletDropdown } from "@/components/wallet-dropdown";
 import { GetUserResponse } from "@/constants/types/api/getUserTypes";
 import { GetWalletResponse } from "@/constants/types/api/getWalletTypes";
-import { env } from "@/env";
+import { getBaseUrl } from "@/env";
 import { use, useEffect, useState } from "react";
 
 interface DashboardProps {
@@ -11,9 +11,7 @@ interface DashboardProps {
 }
 
 async function fetchWalletData(id: string): Promise<GetWalletResponse> {
-  const response = await fetch(
-    `${env.NEXT_PUBLIC_FRONTEND_URL}/api/users/wallets/${id}`
-  );
+  const response = await fetch(`${getBaseUrl()}/api/users/wallets/${id}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch wallet data");
@@ -51,25 +49,25 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Your Wallets</h3>
-            <WalletDropdown
-                walletData={userData.wallets}
-                selectedWallet={selectedWallet}
-                setSelectedWallet={setSelectedWallet}
-            />
-             {loading && <div>Loading wallet data...</div>}
+          <h3 className="text-lg font-semibold">Your Wallets</h3>
+          <WalletDropdown
+            walletData={userData.wallets}
+            selectedWallet={selectedWallet}
+            setSelectedWallet={setSelectedWallet}
+          />
+          {loading && <div>Loading wallet data...</div>}
 
-            {!loading && walletData && (
-                <div className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-2">Wallet Details</h3>
-                <pre className="text-sm bg-muted p-2 rounded overflow-auto max-h-[400px]">
-                    {JSON.stringify(walletData, null, 2)}
-                </pre>
-                </div>
-            )}
+          {!loading && walletData && (
+            <div className="border rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-2">Wallet Details</h3>
+              <pre className="text-sm bg-muted p-2 rounded overflow-auto max-h-[400px]">
+                {JSON.stringify(walletData, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
         <div>
-            <AddressBalanceChecker />
+          <AddressBalanceChecker />
         </div>
       </div>
     </div>

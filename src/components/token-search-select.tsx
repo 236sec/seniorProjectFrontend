@@ -15,7 +15,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { TokenItem } from "@/constants/types/api/getTokensTypes";
-import { env } from "@/env";
+import { getBaseUrl } from "@/env";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown, Coins } from "lucide-react";
 import Image from "next/image";
@@ -68,7 +68,7 @@ export function TokenSearchSelect({
       }
 
       const response = await fetch(
-        `${env.NEXT_PUBLIC_FRONTEND_URL}/api/tokens?${params.toString()}`
+        `${getBaseUrl()}/api/tokens?${params.toString()}`
       );
 
       if (response.ok) {
@@ -162,11 +162,7 @@ export function TokenSearchSelect({
             value={search}
             onValueChange={setSearch}
           />
-          <CommandList
-            ref={listRef}
-            onScroll={handleScroll}
-            style={{ maxHeight: "300px", overflowY: "auto" }}
-          >
+          <CommandList ref={listRef} onScroll={handleScroll}>
             {loading && page === 1 ? (
               <div className="py-6 text-center text-sm">Loading...</div>
             ) : (

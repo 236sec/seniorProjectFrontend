@@ -9,10 +9,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { GetMarketData } from "@/constants/types/api/gecko/getMarketTypes";
+import { getBaseUrl } from "@/env";
 
 async function getMarket() {
-  const data = await fetch("http://localhost:3000/api/coingecko/market");
-  return data.json() as Promise<GetMarketData[]>;
+  const response = await fetch(`${getBaseUrl()}/api/coingecko/market`);
+  return response.json() as Promise<GetMarketData[]>;
 }
 
 export default async function TableMarket() {
