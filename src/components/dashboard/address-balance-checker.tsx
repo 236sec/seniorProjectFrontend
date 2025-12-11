@@ -34,8 +34,9 @@ export function AddressBalanceChecker() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch balances");
+        throw new Error(
+          `Failed to fetch balances with url: ${getBaseUrl()}/api/alchemy/balances/${address}`
+        );
       }
 
       const data: GetAddressBalancesResponse = await response.json();

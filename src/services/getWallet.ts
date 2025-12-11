@@ -22,7 +22,7 @@ export async function getWallet(
       return responseData;
     } else {
       console.error(
-        `Get user failed with status: ${response.status} ${response.statusText}`
+        `Get wallet failed with status: ${response.status} ${response.statusText}`
       );
       const errorText = await response.text();
       console.error(`Error response: ${errorText}`);

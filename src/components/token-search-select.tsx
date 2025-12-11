@@ -67,9 +67,8 @@ export function TokenSearchSelect({
         params.set("search", searchQuery);
       }
 
-      const response = await fetch(
-        `${getBaseUrl()}/api/tokens?${params.toString()}`
-      );
+      const url = `${getBaseUrl()}/api/tokens?${params.toString()}`;
+      const response = await fetch(url);
 
       if (response.ok) {
         const data = await response.json();
@@ -83,7 +82,11 @@ export function TokenSearchSelect({
 
         setHasMore(data.pagination?.hasNextPage || false);
       } else {
-        console.error("Failed to fetch tokens");
+        console.error(
+          `Failed to fetch tokens with status: ${response.status} ${response.statusText} - URL: ${url}`
+        );
+        const errorText = await response.text();
+        console.error(`Error response: ${errorText}`);
         if (pageNum === 1) {
           setTokens([]);
         }

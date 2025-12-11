@@ -14,7 +14,10 @@ async function fetchWalletData(id: string): Promise<GetWalletResponse> {
   const response = await fetch(`${getBaseUrl()}/api/users/wallets/${id}`);
 
   if (!response.ok) {
-    throw new Error("Failed to fetch wallet data");
+    throw new Error(
+      "Failed to fetch wallet data with url: " +
+        `${getBaseUrl()}/api/users/wallets/${id}`
+    );
   }
 
   return await response.json();
@@ -51,7 +54,7 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Your Wallets</h3>
           <WalletDropdown
-            walletData={userData.wallets}
+            walletData={userData?.wallets}
             selectedWallet={selectedWallet}
             setSelectedWallet={setSelectedWallet}
           />

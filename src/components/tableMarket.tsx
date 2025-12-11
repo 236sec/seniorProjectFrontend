@@ -13,6 +13,12 @@ import { getBaseUrl } from "@/env";
 
 async function getMarket() {
   const response = await fetch(`${getBaseUrl()}/api/coingecko/market`);
+  if (!response.ok) {
+    throw new Error(
+      "Failed to fetch wallet data with url: " +
+        `${getBaseUrl()}/api/coingecko/market`
+    );
+  }
   return response.json() as Promise<GetMarketData[]>;
 }
 
