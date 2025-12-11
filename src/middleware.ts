@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "./env";
 
 export default auth((req) => {
   const { nextUrl } = req;
@@ -8,7 +9,7 @@ export default auth((req) => {
 
   const allowedOrigins =
     process.env.NODE_ENV === "production"
-      ? [process.env.NEXT_PUBLIC_VERCEL_URL].filter(Boolean)
+      ? [getBaseUrl()].filter(Boolean)
       : ["http://localhost:3000", "http://127.0.0.1:3000"];
 
   const isAllowedOrigin = origin && allowedOrigins.includes(origin);
