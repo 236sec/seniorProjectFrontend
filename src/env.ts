@@ -21,7 +21,7 @@ export const env = createEnv({
     COINGECKO_API_URL: process.env.COINGECKO_API_URL,
     COINGECKO_DEMO_API_KEY: process.env.COINGECKO_DEMO_API_KEY,
     BACKEND_URL: process.env.BACKEND_URL,
-    NEXT_PUBLIC_VERCEL_URL: process.env.NEXT_PUBLIC_VERCEL_URL,
+    NEXT_PUBLIC_VERCEL_URL: process.env.VERCEL_URL,
   },
 });
 
