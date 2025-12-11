@@ -2,6 +2,10 @@ import type { GetTokensParams } from "@/constants/types/api/getTokensTypes";
 import { getTokens } from "@/services/getTokens";
 import { NextRequest } from "next/server";
 
+async function getData(params: GetTokensParams, ttl: number) {
+  return await getTokens(params, ttl);
+}
+
 export async function GET(request: NextRequest): Promise<Response> {
   const searchParams = request.nextUrl.searchParams;
 
@@ -30,7 +34,7 @@ export async function GET(request: NextRequest): Promise<Response> {
     );
   }
 
-  const data = await getTokens(params);
+  const data = await getData(params, 300);
 
   return data
     ? Response.json(data, { status: 200 })

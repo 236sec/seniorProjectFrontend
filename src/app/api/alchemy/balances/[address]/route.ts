@@ -1,5 +1,12 @@
 import { getAddressBalances } from "@/services/alchemy/getBalances";
 
+async function getData(
+  params: Parameters<typeof getAddressBalances>[0],
+  ttl: number
+) {
+  return await getAddressBalances(params, ttl);
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ address: string }> }
@@ -15,7 +22,7 @@ export async function GET(
       );
     }
 
-    const data = await getAddressBalances({ address });
+    const data = await getData({ address }, 60);
 
     if (!data) {
       return Response.json(

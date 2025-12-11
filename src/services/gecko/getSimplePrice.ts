@@ -7,7 +7,8 @@ import {
 import { env } from "@/env";
 
 export async function getSimplePrice(
-  data: GetSimplePriceParams
+  data: GetSimplePriceParams,
+  ttl: number
 ): Promise<GetSimplePriceData | undefined> {
   try {
     const params = new URLSearchParams({
@@ -27,6 +28,7 @@ export async function getSimplePrice(
     const url = `${coingeckoApiUrl}/simple/price?${params.toString()}`;
     const response = await fetch(url, {
       method: "GET",
+      next: { revalidate: ttl },
     });
     // For debugging cache hit or miss
     // const dateHeader = response.headers.get("date");

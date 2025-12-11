@@ -1,5 +1,4 @@
 import { getHistoricalChart } from "@/services/gecko/getHistoricalChart";
-import { cacheLife } from "next/dist/server/use-cache/cache-life";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -15,9 +14,7 @@ async function getData(
   params: Parameters<typeof getHistoricalChart>[0],
   ttl: number
 ) {
-  "use cache";
-  cacheLife({ stale: ttl, revalidate: ttl }); // Set cache life to 300 seconds (5 minutes)
-  return await getHistoricalChart(params);
+  return await getHistoricalChart(params, ttl);
 }
 
 export async function GET(

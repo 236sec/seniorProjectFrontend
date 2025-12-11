@@ -41,7 +41,8 @@ interface BackendBalanceResponse {
  * Get address balances from backend API across multiple chains
  */
 export async function getAddressBalances(
-  data: GetAddressBalancesParams
+  data: GetAddressBalancesParams,
+  ttl: number
 ): Promise<GetAddressBalancesResponse | undefined> {
   try {
     const backendUrl = env.BACKEND_URL;
@@ -55,7 +56,7 @@ export async function getAddressBalances(
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: ttl },
     });
 
     if (response.ok) {

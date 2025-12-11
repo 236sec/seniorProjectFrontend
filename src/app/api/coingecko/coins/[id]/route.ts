@@ -1,6 +1,5 @@
 import { getCoin } from "@/services/gecko/getCoin";
 import { getSimplePrice } from "@/services/gecko/getSimplePrice";
-import { cacheLife } from "next/dist/server/use-cache/cache-life";
 import { NextResponse } from "next/server";
 
 async function getData(
@@ -8,11 +7,9 @@ async function getData(
   simplePriceParams: Parameters<typeof getSimplePrice>[0],
   ttl: number
 ) {
-  "use cache";
-  cacheLife({ stale: ttl, revalidate: ttl }); // Set cache life to 300 seconds (5 minutes)
   const [coinData, simplePriceData] = await Promise.all([
-    getCoin(coinParams),
-    getSimplePrice(simplePriceParams),
+    getCoin(coinParams, ttl),
+    getSimplePrice(simplePriceParams, ttl),
   ]);
   return {
     coinData,

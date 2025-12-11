@@ -1,5 +1,4 @@
 import { getMarket } from "@/services/gecko/getMarket";
-import { cacheLife } from "next/dist/server/use-cache/cache-life";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -12,9 +11,7 @@ const requestSchema = z.object({
 });
 
 async function getData(params: Parameters<typeof getMarket>[0], ttl: number) {
-  "use cache";
-  cacheLife({ stale: ttl, revalidate: ttl }); // Set cache life to 300 seconds (5 minutes)
-  return await getMarket(params);
+  return await getMarket(params, ttl);
 }
 
 export async function GET(req: Request) {

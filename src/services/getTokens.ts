@@ -7,7 +7,8 @@ import type {
 import { env } from "@/env";
 
 export async function getTokens(
-  params: GetTokensParams = {}
+  params: GetTokensParams = {},
+  ttl: number
 ): Promise<GetTokensResponse | null> {
   const { page = 1, limit = 10, search = "" } = params;
 
@@ -28,7 +29,7 @@ export async function getTokens(
         headers: {
           "Content-Type": "application/json",
         },
-        cache: "no-store",
+        next: { revalidate: ttl },
       }
     );
 

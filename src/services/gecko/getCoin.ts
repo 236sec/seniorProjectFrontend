@@ -7,7 +7,8 @@ import {
 import { env } from "@/env";
 
 export async function getCoin(
-  data: GetCoinParams
+  data: GetCoinParams,
+  ttl: number
 ): Promise<GetCoinData | undefined> {
   try {
     const params = new URLSearchParams({
@@ -25,6 +26,7 @@ export async function getCoin(
     const url = `${coingeckoApiUrl}/coins/${data.id}?${params.toString()}`;
     const response = await fetch(url, {
       method: "GET",
+      next: { revalidate: ttl },
     });
     // For debugging cache hit or miss
     // const dateHeader = response.headers.get("date");

@@ -6,7 +6,8 @@ import {
 import { env } from "@/env";
 
 export async function getHistoricalChart(
-  data: GetHistoricalChartParams
+  data: GetHistoricalChartParams,
+  ttl: number
 ): Promise<GetHistoricalChartData | undefined> {
   try {
     const params = new URLSearchParams({
@@ -22,6 +23,7 @@ export async function getHistoricalChart(
     }/market_chart?${params.toString()}`;
     const response = await fetch(url, {
       method: "GET",
+      next: { revalidate: ttl },
     });
     // For debugging cache hit or miss
     // const dateHeader = response.headers.get("date");
