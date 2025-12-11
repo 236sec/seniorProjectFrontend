@@ -1,3 +1,5 @@
+"use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { GetMarketData } from "@/constants/types/api/gecko/getMarketTypes";
 import { getBaseUrl } from "@/env";
+import { useEffect, useState } from "react";
 
 async function getMarket() {
   const response = await fetch(`${getBaseUrl()}/api/coingecko/market`);
@@ -22,8 +25,18 @@ async function getMarket() {
   return response.json() as Promise<GetMarketData[]>;
 }
 
-export default async function TableMarket() {
-  const marketData = await getMarket();
+export default function TableMarket() {
+  const [marketData, setMarketData] = useState<GetMarketData[] | null>(null);
+
+  useEffect(() => {
+    getMarket()
+      .then((data) => {
+        setMarketData(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching market data:", error);
+      });
+  }, []);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
