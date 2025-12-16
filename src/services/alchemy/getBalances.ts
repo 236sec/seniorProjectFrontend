@@ -10,8 +10,10 @@ interface BackendBalanceResponse {
   address: string;
   chain: string[];
   nativeBalances: Array<{
+    contractAddress: string;
     network: string;
     balance: string;
+    balanceFormatted: string;
   }>;
   balances: Array<{
     contractAddress: string;

@@ -4,8 +4,10 @@ export interface GetAddressBalancesParams {
 }
 
 export interface NativeBalanceData {
+  contractAddress: string;
   network: string;
   balance: string;
+  balanceFormatted: string;
 }
 
 export interface TokenBalanceData {

@@ -96,7 +96,7 @@ export function AddressBalanceChecker() {
                       {native.network}
                     </p>
                     <p className="text-lg font-bold">
-                      {parseFloat(native.balance).toFixed(4)} ETH
+                      {parseFloat(native.balanceFormatted).toFixed(4)} ETH
                     </p>
                   </div>
                 ))}
