@@ -184,4 +184,4 @@ const { data: session } = useSession();
 
 ## Documentation
 
-External API specs in `docs/` (e.g., `api-spec-token-list.md`). Reference these when implementing new integrations.
+External API specs in `docs/` (e.g., `api-spec-token-list.md`). Reference these when implementing new integrations for backend api calls and for coingecko/alchemy services is found in `https://docs.coingecko.com/v3.0.1/reference` and `https://www.alchemy.com/docs`.
