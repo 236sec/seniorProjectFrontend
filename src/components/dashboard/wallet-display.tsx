@@ -34,6 +34,7 @@ function formatBalance(balance: string): string {
     }
     return balance;
   } catch (e) {
+    void e;
     return balance;
   }
 }
@@ -233,7 +234,7 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
               <CardHeader>
                 <CardTitle>Manually Added Assets</CardTitle>
                 <CardDescription>
-                  Assets you've manually tracked in this portfolio
+                  Assets you&apos;ve manually tracked in this portfolio
                 </CardDescription>
               </CardHeader>
               <CardContent>
