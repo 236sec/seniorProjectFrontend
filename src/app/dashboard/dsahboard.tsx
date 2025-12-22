@@ -1,5 +1,6 @@
 "use client";
 import { AddressBalanceChecker } from "@/components/dashboard/address-balance-checker";
+import { WalletDisplay } from "@/components/dashboard/wallet-display";
 import { WalletDropdown } from "@/components/wallet-dropdown";
 import { GetUserResponse } from "@/constants/types/api/getUserTypes";
 import { GetWalletResponse } from "@/constants/types/api/getWalletTypes";
@@ -52,22 +53,24 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Your Wallets</h3>
-          <WalletDropdown
-            walletData={userData?.wallets}
-            selectedWallet={selectedWallet}
-            setSelectedWallet={setSelectedWallet}
-          />
-          {loading && <div>Loading wallet data...</div>}
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Your Wallets</h3>
+            <WalletDropdown
+              walletData={userData?.wallets}
+              selectedWallet={selectedWallet}
+              setSelectedWallet={setSelectedWallet}
+            />
+          </div>
 
-          {!loading && walletData && (
-            <div className="border rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-2">Wallet Details</h3>
-              <pre className="text-sm bg-muted p-2 rounded overflow-auto max-h-[400px]">
-                {JSON.stringify(walletData, null, 2)}
-              </pre>
+          {loading && (
+            <div className="flex items-center justify-center p-8 border rounded-lg bg-muted/10">
+              <div className="text-muted-foreground">
+                Loading wallet data...
+              </div>
             </div>
           )}
+
+          {!loading && walletData && <WalletDisplay walletData={walletData} />}
         </div>
         <div>
           <AddressBalanceChecker />
