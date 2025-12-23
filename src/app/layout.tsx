@@ -1,12 +1,7 @@
 import { auth } from "@/auth";
-import { AppSidebar } from "@/components/app-sidebar";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
 import { CustomSessionProvider } from "@/providers/session-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -44,13 +39,7 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset>
-                <SidebarTrigger />
-                <main>{children}</main>
-              </SidebarInset>
-            </SidebarProvider>
+            <RootProvider>{children}</RootProvider>
           </ThemeProvider>
         </body>
       </html>

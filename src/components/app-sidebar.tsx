@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Bot, Settings2, SquareTerminal } from "lucide-react";
+import { BookOpen, Settings2, SquareTerminal } from "lucide-react";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
@@ -30,13 +30,8 @@ const data = {
       icon: SquareTerminal,
     },
     {
-      title: "Models",
-      url: "/models",
-      icon: Bot,
-    },
-    {
       title: "Documentation",
-      url: "/documentation",
+      url: "/docs",
       icon: BookOpen,
     },
     {
