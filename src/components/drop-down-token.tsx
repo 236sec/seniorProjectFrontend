@@ -21,17 +21,17 @@ import { Check, ChevronsUpDown, Coins } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
 
-interface TokenSearchSelectProps {
+interface DropDownTokenProps {
   onSelect?: (token: TokenItem | null) => void;
   placeholder?: string;
   className?: string;
 }
 
-export function TokenSearchSelect({
+export function DropDownToken({
   onSelect,
   placeholder = "Select token...",
   className,
-}: TokenSearchSelectProps) {
+}: DropDownTokenProps) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState<string>("");
   const [search, setSearch] = React.useState("");
@@ -85,8 +85,6 @@ export function TokenSearchSelect({
         console.error(
           `Failed to fetch tokens with status: ${response.status} ${response.statusText} - URL: ${url}`
         );
-        const errorText = await response.text();
-        console.error(`Error response: ${errorText}`);
         if (pageNum === 1) {
           setTokens([]);
         }
@@ -130,44 +128,52 @@ export function TokenSearchSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          className={cn("w-[250px] justify-between", className)}
         >
           {selectedToken ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 overflow-hidden w-full">
               {selectedToken.image?.thumb ? (
                 <Image
                   src={selectedToken.image.thumb}
                   alt={selectedToken.name}
-                  width={25}
-                  height={25}
-                  className="h-[25px] w-[25px] rounded-full"
+                  width={20}
+                  height={20}
+                  className="h-5 w-5 rounded-full shrink-0"
                 />
               ) : (
-                <div className="h-[25px] w-[25px] rounded-full bg-muted flex items-center justify-center">
+                <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0">
                   <Coins className="h-3 w-3 text-muted-foreground" />
                 </div>
               )}
-              <span className="truncate">{selectedToken.name}</span>
-              <span className="text-muted-foreground uppercase">
+              <span className="truncate flex-1 text-left">
+                {selectedToken.name}
+              </span>
+              <span className="text-muted-foreground uppercase text-xs shrink-0">
                 ({selectedToken.symbol})
               </span>
             </div>
           ) : (
-            placeholder
+            <span className="text-muted-foreground">{placeholder}</span>
           )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] h-[30px] p-0">
+      <PopoverContent className="w-[250px] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
             placeholder="Search tokens..."
             value={search}
             onValueChange={setSearch}
           />
-          <CommandList ref={listRef} onScroll={handleScroll}>
+          <CommandList
+            ref={listRef}
+            onScroll={handleScroll}
+            className="max-h-[300px]"
+          >
             {loading && page === 1 ? (
-              <div className="py-6 text-center text-sm">Loading...</div>
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                Loading...
+              </div>
             ) : (
               <>
                 <CommandEmpty>No token found.</CommandEmpty>
@@ -184,22 +190,24 @@ export function TokenSearchSelect({
                           value === token.id ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      <div className="flex items-center gap-2 flex-1">
+                      <div className="flex items-center gap-2 flex-1 overflow-hidden">
                         {token.image?.thumb ? (
                           <Image
                             src={token.image.thumb}
                             alt={token.name}
-                            width={25}
-                            height={25}
-                            className="h-[25px] w-[25px] rounded-full"
+                            width={20}
+                            height={20}
+                            className="h-5 w-5 rounded-full shrink-0"
                           />
                         ) : (
-                          <div className="h-[25px] w-[25px] rounded-full bg-muted flex items-center justify-center">
+                          <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0">
                             <Coins className="h-3 w-3 text-muted-foreground" />
                           </div>
                         )}
-                        <div className="flex flex-col">
-                          <span className="font-medium">{token.name}</span>
+                        <div className="flex flex-col overflow-hidden w-full">
+                          <span className="truncate font-medium block">
+                            {token.name}
+                          </span>
                           <span className="text-xs text-muted-foreground uppercase">
                             {token.symbol}
                           </span>
