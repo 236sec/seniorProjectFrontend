@@ -1,5 +1,6 @@
 "use client";
 import { AddressBalanceChecker } from "@/components/dashboard/address-balance-checker";
+import { CreateTransactionDialog } from "@/components/dashboard/create-transaction-dialog";
 import { WalletDisplay } from "@/components/dashboard/wallet-display";
 import { WalletDropdown } from "@/components/wallet-dropdown";
 import { GetUserResponse } from "@/constants/types/api/getUserTypes";
@@ -55,11 +56,30 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Your Wallets</h3>
-            <WalletDropdown
-              walletData={userData?.wallets}
-              selectedWallet={selectedWallet}
-              setSelectedWallet={setSelectedWallet}
-            />
+            <div className="flex items-center gap-2">
+              {selectedWallet && (
+                <CreateTransactionDialog
+                  walletId={selectedWallet}
+                  onTransactionCreated={() => {
+                    setLoading(true);
+                    fetchWalletData(selectedWallet)
+                      .then((data) => {
+                        setWalletData(data);
+                        setLoading(false);
+                      })
+                      .catch((error) => {
+                        console.error("Error fetching wallet data:", error);
+                        setLoading(false);
+                      });
+                  }}
+                />
+              )}
+              <WalletDropdown
+                walletData={userData?.wallets}
+                selectedWallet={selectedWallet}
+                setSelectedWallet={setSelectedWallet}
+              />
+            </div>
           </div>
 
           {loading && (

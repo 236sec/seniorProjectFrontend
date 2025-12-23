@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import {
   GetWalletResponse,
+  ManualTokenBalance,
   TokenBalance,
 } from "@/constants/types/api/getWalletTypes";
 import { Utils } from "alchemy-sdk";
@@ -47,22 +48,29 @@ interface AggregatedToken {
   totalBalance: bigint;
 }
 
+function getTokenDetails(token: TokenBalance | ManualTokenBalance) {
+  if ("tokenContractId" in token) {
+    return token.tokenContractId.tokenId;
+  }
+  return token.tokenId;
+}
+
 function getAggregatedTokens(walletData: GetWalletResponse): AggregatedToken[] {
   const tokenMap = new Map<string, AggregatedToken>();
 
-  const processToken = (token: TokenBalance) => {
-    const tokenId = token.tokenContractId.tokenId.id;
+  const processToken = (token: TokenBalance | ManualTokenBalance) => {
+    const tokenDetails = getTokenDetails(token);
     const currentBalance = BigInt(token.balance);
 
-    if (tokenMap.has(tokenId)) {
-      const existing = tokenMap.get(tokenId)!;
+    if (tokenMap.has(tokenDetails.id)) {
+      const existing = tokenMap.get(tokenDetails.id)!;
       existing.totalBalance += currentBalance;
     } else {
-      tokenMap.set(tokenId, {
-        id: tokenId,
-        name: token.tokenContractId.tokenId.name,
-        symbol: token.tokenContractId.tokenId.symbol,
-        image: token.tokenContractId.tokenId.image.small,
+      tokenMap.set(tokenDetails.id, {
+        id: tokenDetails.id,
+        name: tokenDetails.name,
+        symbol: tokenDetails.symbol,
+        image: tokenDetails.image.small,
         totalBalance: currentBalance,
       });
     }
@@ -79,7 +87,11 @@ function getAggregatedTokens(walletData: GetWalletResponse): AggregatedToken[] {
   return Array.from(tokenMap.values());
 }
 
-function TokenTable({ tokens }: { tokens: TokenBalance[] }) {
+function TokenTable({
+  tokens,
+}: {
+  tokens: (TokenBalance | ManualTokenBalance)[];
+}) {
   if (!tokens || tokens.length === 0) {
     return (
       <div className="text-sm text-muted-foreground py-4">No tokens found.</div>
@@ -96,32 +108,28 @@ function TokenTable({ tokens }: { tokens: TokenBalance[] }) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {tokens.map((token, index) => (
-          <TableRow key={token.tokenContractId._id || index}>
-            <TableCell className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage
-                  src={token.tokenContractId.tokenId.image.small}
-                  alt={token.tokenContractId.tokenId.name}
-                />
-                <AvatarFallback>
-                  {token.tokenContractId.tokenId.symbol
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="font-medium">
-                {token.tokenContractId.tokenId.name}
-              </span>
-            </TableCell>
-            <TableCell className="uppercase text-muted-foreground">
-              {token.tokenContractId.tokenId.symbol}
-            </TableCell>
-            <TableCell className="text-right font-mono">
-              {formatBalance(token.balance)}
-            </TableCell>
-          </TableRow>
-        ))}
+        {tokens.map((token, index) => {
+          const details = getTokenDetails(token);
+          return (
+            <TableRow key={details._id || index}>
+              <TableCell className="flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={details.image.small} alt={details.name} />
+                  <AvatarFallback>
+                    {details.symbol.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-medium">{details.name}</span>
+              </TableCell>
+              <TableCell className="uppercase text-muted-foreground">
+                {details.symbol}
+              </TableCell>
+              <TableCell className="text-right font-mono">
+                {formatBalance(token.balance)}
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );

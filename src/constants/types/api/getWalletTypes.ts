@@ -29,6 +29,11 @@ export interface TokenBalance {
   balance: string;
 }
 
+export interface ManualTokenBalance {
+  tokenId: TokenDetails;
+  balance: string;
+}
+
 export interface BlockchainWallet {
   _id: string;
   address: string;
@@ -48,7 +53,7 @@ export interface GetWalletResponse {
   updatedAt: string;
   __v: number;
   blockchainWalletId: BlockchainWallet[];
-  manualTokens: TokenBalance[];
+  manualTokens: ManualTokenBalance[];
 }
 
 export interface GetWalletParams {
