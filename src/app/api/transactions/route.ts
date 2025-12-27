@@ -11,12 +11,14 @@ const requestSchema = z.object({
   type: z.enum(TransactionType),
   blockchainWalletId: z.string().optional(),
   tokenContractId: z.string().optional(),
+  tokenId: z.string().optional(),
   event_type: z.enum(TransactionEventType).optional(),
-  quantity: z.string().optional(),
+  quantity: z.string(),
   from: z.string().optional(),
   to: z.string().optional(),
   price_usd: z.number().optional(),
   cashflow_usd: z.number().optional(),
+  timestamp: z.coerce.date().optional(),
 });
 
 export async function POST(req: Request) {

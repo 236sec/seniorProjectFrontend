@@ -1,6 +1,8 @@
 "use client";
+import { AddBlockchainWalletDialog } from "@/components/dashboard/add-blockchain-wallet-dialog";
 import { AddressBalanceChecker } from "@/components/dashboard/address-balance-checker";
 import { CreateTransactionDialog } from "@/components/dashboard/create-transaction-dialog";
+import { TransactionHistory } from "@/components/dashboard/transaction-history";
 import { WalletDisplay } from "@/components/dashboard/wallet-display";
 import { WalletDropdown } from "@/components/wallet-dropdown";
 import { GetUserResponse } from "@/constants/types/api/getUserTypes";
@@ -34,8 +36,7 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
   );
   const [walletData, setWalletData] = useState<GetWalletResponse | null>(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
+  const refreshWalletData = () => {
     if (selectedWallet) {
       setLoading(true);
       fetchWalletData(selectedWallet)
@@ -48,6 +49,10 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
           setLoading(false);
         });
     }
+  };
+
+  useEffect(() => {
+    refreshWalletData();
   }, [selectedWallet]);
 
   return (
@@ -58,21 +63,16 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
             <h3 className="text-lg font-semibold">Your Wallets</h3>
             <div className="flex items-center gap-2">
               {selectedWallet && (
-                <CreateTransactionDialog
-                  walletId={selectedWallet}
-                  onTransactionCreated={() => {
-                    setLoading(true);
-                    fetchWalletData(selectedWallet)
-                      .then((data) => {
-                        setWalletData(data);
-                        setLoading(false);
-                      })
-                      .catch((error) => {
-                        console.error("Error fetching wallet data:", error);
-                        setLoading(false);
-                      });
-                  }}
-                />
+                <>
+                  <AddBlockchainWalletDialog
+                    walletId={selectedWallet}
+                    onWalletAdded={refreshWalletData}
+                  />
+                  <CreateTransactionDialog
+                    walletId={selectedWallet}
+                    onTransactionCreated={refreshWalletData}
+                  />
+                </>
               )}
               <WalletDropdown
                 walletData={userData?.wallets}
@@ -90,7 +90,12 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
             </div>
           )}
 
-          {!loading && walletData && <WalletDisplay walletData={walletData} />}
+          {!loading && walletData && (
+            <>
+              <WalletDisplay walletData={walletData} />
+              <TransactionHistory transactions={walletData.transactions} />
+            </>
+          )}
         </div>
         <div>
           <AddressBalanceChecker />

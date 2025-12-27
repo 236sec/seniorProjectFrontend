@@ -44,6 +44,21 @@ export interface BlockchainWallet {
   __v: number;
 }
 
+export interface Transaction {
+  _id: string;
+  walletId: string;
+  type: string;
+  event_type: string;
+  tokenId: string;
+  quantity: string;
+  price_usd: number;
+  cashflow_usd: number;
+  timestamp: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 export interface GetWalletResponse {
   _id: string;
   userId: string;
@@ -54,6 +69,7 @@ export interface GetWalletResponse {
   __v: number;
   blockchainWalletId: BlockchainWallet[];
   manualTokens: ManualTokenBalance[];
+  transactions: Transaction[];
 }
 
 export interface GetWalletParams {

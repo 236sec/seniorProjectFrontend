@@ -17,23 +17,28 @@ The request body should be a JSON object with the following fields:
 | `walletId`           | ObjectId | Yes      | The ID of the wallet this transaction belongs to.                                                          |
 | `type`               | Enum     | Yes      | The type of transaction. Values: `MANUAL`, `SYNCED`.                                                       |
 | `blockchainWalletId` | ObjectId | Optional | The ID of the blockchain wallet (required if `type` is `SYNCED`). Must belong to the specified `walletId`. |
-| `tokenContractId`    | ObjectId | Optional | The ID of the token contract involved in the transaction.                                                  |
+| `tokenContractId`    | ObjectId | Optional | The ID of the token contract involved in the transaction (required if `type` is `SYNCED`).                 |
+| `tokenId`            | ObjectId | Optional | The ID of the token involved in the transaction (required if `type` is `MANUAL`).                          |
 | `event_type`         | Enum     | Optional | The type of event. Values: `SWAP`, `DEPOSIT`, `WITHDRAWAL`.                                                |
-| `quantity`           | String   | Optional | The amount of tokens involved (in raw hex or string format).                                               |
+| `quantity`           | String   | Optional | The amount of tokens involved (must be a hex string, e.g., "0x1a").                                        |
 | `from`               | String   | Optional | The sender address.                                                                                        |
 | `to`                 | String   | Optional | The recipient address.                                                                                     |
 | `price_usd`          | Number   | Optional | The price of the token in USD at the time of the transaction.                                              |
 | `cashflow_usd`       | Number   | Optional | The total value of the transaction in USD.                                                                 |
+| `timestamp`          | Date     | Yes      | The date and time of the transaction (ISO 8601 format).                                                    |
 
 ### Behavior
 
-- **Validation**: Checks if the `walletId` and `tokenContractId` exist.
+- **Validation**: Checks if the `walletId` exists.
 - **Synced Transactions**:
-  - Requires `blockchainWalletId`.
+  - Requires `blockchainWalletId` and `tokenContractId`.
   - Verifies that the `blockchainWalletId` is associated with the `walletId`.
-  - Updates the balance in the specified `blockchainWallet`.
+  - Updates the balance in the specified `blockchainWallet` using `tokenContractId` (only for `DEPOSIT` and `WITHDRAWAL` events).
+  - Throws an error if `WITHDRAWAL` amount exceeds the current balance or if the token is not found in the wallet.
 - **Manual Transactions**:
-  - Updates the balance in the `manualTokens` array of the `wallet`.
+  - Requires `tokenId`.
+  - Updates the balance in the `manualTokens` array of the `wallet` using `tokenId` (only for `DEPOSIT` and `WITHDRAWAL` events).
+  - Throws an error if `WITHDRAWAL` amount exceeds the current balance or if the token is not found in the wallet.
 
 ### Example Request (Manual Deposit)
 
@@ -42,10 +47,11 @@ The request body should be a JSON object with the following fields:
   "walletId": "60d5ecb8b487343568912345",
   "type": "MANUAL",
   "event_type": "DEPOSIT",
-  "tokenContractId": "60d5ecb8b4873435689fghij",
+  "tokenId": "60d5ecb8b4873435689klmno",
   "quantity": "0xde0b6b3a7640000", // 1 ETH in wei (hex)
   "price_usd": 3000,
-  "cashflow_usd": 3000
+  "cashflow_usd": 3000,
+  "timestamp": "2023-10-27T10:00:00.000Z"
 }
 ```
 
@@ -60,7 +66,8 @@ The request body should be a JSON object with the following fields:
   "tokenContractId": "60d5ecb8b4873435689fghij",
   "quantity": "0xde0b6b3a7640000",
   "from": "0x123...",
-  "to": "0x456..."
+  "to": "0x456...",
+  "timestamp": "2023-10-27T10:00:00.000Z"
 }
 ```
 
@@ -75,6 +82,7 @@ Returns the created transaction object.
   "type": "MANUAL",
   "event_type": "DEPOSIT",
   "quantity": "0xde0b6b3a7640000",
+  "timestamp": "2023-10-27T10:00:00.000Z",
   "createdAt": "2023-10-27T10:00:00.000Z",
   "updatedAt": "2023-10-27T10:00:00.000Z"
 }

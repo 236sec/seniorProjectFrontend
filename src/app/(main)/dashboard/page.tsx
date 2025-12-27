@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { getUser } from "@/services/getUser";
 import { Suspense } from "react";
-import { Dashboard } from "./dsahboard";
+import { Dashboard } from "./dashboard";
 import { DashboardTokenSelect } from "./token-select";
 
 async function getData(id: string) {

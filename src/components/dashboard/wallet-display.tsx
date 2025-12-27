@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,6 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Table,
   TableBody,
@@ -21,6 +27,7 @@ import {
   TokenBalance,
 } from "@/constants/types/api/getWalletTypes";
 import { Utils } from "alchemy-sdk";
+import { ChevronRight, RefreshCw } from "lucide-react";
 
 interface WalletDisplayProps {
   walletData: GetWalletResponse;
@@ -40,12 +47,19 @@ function formatBalance(balance: string): string {
   }
 }
 
+interface TokenSource {
+  sourceName: string;
+  sourceType: "manual" | "blockchain";
+  balance: bigint;
+}
+
 interface AggregatedToken {
   id: string;
   name: string;
   symbol: string;
   image: string;
   totalBalance: bigint;
+  sources: TokenSource[];
 }
 
 function getTokenDetails(token: TokenBalance | ManualTokenBalance) {
@@ -58,13 +72,22 @@ function getTokenDetails(token: TokenBalance | ManualTokenBalance) {
 function getAggregatedTokens(walletData: GetWalletResponse): AggregatedToken[] {
   const tokenMap = new Map<string, AggregatedToken>();
 
-  const processToken = (token: TokenBalance | ManualTokenBalance) => {
+  const processToken = (
+    token: TokenBalance | ManualTokenBalance,
+    sourceName: string,
+    sourceType: "manual" | "blockchain"
+  ) => {
     const tokenDetails = getTokenDetails(token);
     const currentBalance = BigInt(token.balance);
 
     if (tokenMap.has(tokenDetails.id)) {
       const existing = tokenMap.get(tokenDetails.id)!;
       existing.totalBalance += currentBalance;
+      existing.sources.push({
+        sourceName,
+        sourceType,
+        balance: currentBalance,
+      });
     } else {
       tokenMap.set(tokenDetails.id, {
         id: tokenDetails.id,
@@ -72,17 +95,28 @@ function getAggregatedTokens(walletData: GetWalletResponse): AggregatedToken[] {
         symbol: tokenDetails.symbol,
         image: tokenDetails.image.small,
         totalBalance: currentBalance,
+        sources: [
+          {
+            sourceName,
+            sourceType,
+            balance: currentBalance,
+          },
+        ],
       });
     }
   };
 
   // Process blockchain wallets
   walletData.blockchainWalletId.forEach((wallet) => {
-    wallet.tokens.forEach(processToken);
+    wallet.tokens.forEach((token) =>
+      processToken(token, wallet.address, "blockchain")
+    );
   });
 
   // Process manual tokens
-  walletData.manualTokens.forEach(processToken);
+  walletData.manualTokens.forEach((token) =>
+    processToken(token, "Manual Balance", "manual")
+  );
 
   return Array.from(tokenMap.values());
 }
@@ -155,46 +189,83 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Asset</TableHead>
-                  <TableHead>Symbol</TableHead>
-                  <TableHead className="text-right">Total Balance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <div className="space-y-2">
+              <div className="grid grid-cols-[1fr_100px_150px] px-4 text-sm font-medium text-muted-foreground">
+                <div>Asset</div>
+                <div>Symbol</div>
+                <div className="text-right">Total Balance</div>
+              </div>
+              <div className="space-y-2">
                 {aggregatedTokens.map((token) => (
-                  <TableRow key={token.id}>
-                    <TableCell className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={token.image} alt={token.name} />
-                        <AvatarFallback>
-                          {token.symbol.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{token.name}</span>
-                    </TableCell>
-                    <TableCell className="uppercase text-muted-foreground">
-                      {token.symbol}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-bold">
-                      {Utils.formatUnits(token.totalBalance.toString(), 18)}
-                    </TableCell>
-                  </TableRow>
+                  <Collapsible key={token.id}>
+                    <div className="rounded-md border bg-card">
+                      <CollapsibleTrigger className="flex w-full items-center p-4 hover:bg-muted/50 [&[data-state=open]>div>div>svg]:rotate-90">
+                        <div className="grid w-full grid-cols-[1fr_100px_150px] items-center">
+                          <div className="flex items-center gap-2">
+                            <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={token.image} alt={token.name} />
+                              <AvatarFallback>
+                                {token.symbol.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{token.name}</span>
+                          </div>
+                          <div className="text-left uppercase text-muted-foreground">
+                            {token.symbol}
+                          </div>
+                          <div className="text-right font-mono font-bold">
+                            {Utils.formatUnits(
+                              token.totalBalance.toString(),
+                              18
+                            )}
+                          </div>
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="border-t bg-muted/5 p-4 space-y-2">
+                          {token.sources.map((source, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between text-sm"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Badge
+                                  variant={
+                                    source.sourceType === "manual"
+                                      ? "outline"
+                                      : "secondary"
+                                  }
+                                  className="text-xs"
+                                >
+                                  {source.sourceType === "manual"
+                                    ? "Manual"
+                                    : "Chain"}
+                                </Badge>
+                                <span className="text-muted-foreground font-mono text-xs truncate max-w-[200px]">
+                                  {source.sourceName}
+                                </span>
+                              </div>
+                              <span className="font-mono">
+                                {Utils.formatUnits(
+                                  source.balance.toString(),
+                                  18
+                                )}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
                 ))}
                 {aggregatedTokens.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={3}
-                      className="text-center text-muted-foreground"
-                    >
-                      No assets found in this portfolio.
-                    </TableCell>
-                  </TableRow>
+                  <div className="text-center text-muted-foreground py-8">
+                    No assets found in this portfolio.
+                  </div>
                 )}
-              </TableBody>
-            </Table>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -213,12 +284,23 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
                       Added on {new Date(wallet.createdAt).toLocaleDateString()}
                     </CardDescription>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     {wallet.chains.map((chain) => (
                       <Badge key={chain} variant="secondary">
                         {chain}
                       </Badge>
                     ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Mock sync functionality
+                        console.log("Syncing wallet:", wallet.address);
+                      }}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Sync
+                    </Button>
                   </div>
                 </div>
               </CardHeader>

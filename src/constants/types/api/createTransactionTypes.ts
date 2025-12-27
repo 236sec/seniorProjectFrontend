@@ -14,12 +14,14 @@ export interface CreateTransactionRequest {
   type: TransactionType;
   blockchainWalletId?: string;
   tokenContractId?: string;
+  tokenId?: string;
   event_type?: TransactionEventType;
   quantity?: string;
   from?: string;
   to?: string;
   price_usd?: number;
   cashflow_usd?: number;
+  timestamp?: Date;
 }
 
 export interface CreateTransactionResponse {
