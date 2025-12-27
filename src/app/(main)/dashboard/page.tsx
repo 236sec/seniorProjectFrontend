@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { ChartAreaInteractive } from "@/components/chart";
 import { getUser } from "@/services/getUser";
 import { Suspense } from "react";
 import { Dashboard } from "./dashboard";
@@ -23,6 +24,8 @@ export default async function Page() {
       <Suspense fallback={<div>Loading dashboard...</div>}>
         <Dashboard userDataPromised={userDataPromised} />
       </Suspense>
+
+      <ChartAreaInteractive />
     </div>
   );
 }
