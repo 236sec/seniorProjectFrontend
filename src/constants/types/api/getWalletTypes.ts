@@ -49,7 +49,7 @@ export interface Transaction {
   walletId: string;
   type: string;
   event_type: string;
-  tokenId: string;
+  tokenId: TokenDetails;
   quantity: string;
   price_usd: number;
   cashflow_usd: number;
