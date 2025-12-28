@@ -170,6 +170,25 @@ const response = await fetch(`${env.NEXT_PUBLIC_FRONTEND_URL}/api/...`, {
 });
 ```
 
+### Server-side API Calls
+
+```typescript
+// page.tsx or server component
+const response = fetch(`${env.NEXT_PUBLIC_FRONTEND_URL}/api/...`, {
+  method: "GET",
+  headers: { "Content-Type": "application/json" },
+});
+
+<Component dataPromise={response} />;
+
+// In component
+import { use } from "react";
+
+function Component({ dataPromise }: { dataPromise: Promise<Response> }) {
+  const message = use(dataPromise);
+}
+```
+
 ### Session Access
 
 ```typescript

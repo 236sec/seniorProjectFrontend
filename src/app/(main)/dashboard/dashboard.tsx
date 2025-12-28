@@ -6,6 +6,7 @@ import { TransactionHistory } from "@/components/dashboard/transaction-history";
 import { WalletDisplay } from "@/components/dashboard/wallet-display";
 import { WalletDropdown } from "@/components/wallet-dropdown";
 import { GetUserResponse } from "@/constants/types/api/getUserTypes";
+import { GetWalletTransactionsResponse } from "@/constants/types/api/getWalletTransactionsTypes";
 import { GetWalletResponse } from "@/constants/types/api/getWalletTypes";
 import { getBaseUrl } from "@/env";
 import { use, useEffect, useState } from "react";
@@ -35,7 +36,32 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
       : null
   );
   const [walletData, setWalletData] = useState<GetWalletResponse | null>(null);
+  const [transactionsData, setTransactionsData] =
+    useState<GetWalletTransactionsResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const fetchTransactions = async (
+    walletId: string,
+    limit = 10,
+    offset = 0
+  ) => {
+    try {
+      setTransactionsLoading(true);
+      const response = await fetch(
+        `${getBaseUrl()}/api/wallets/transactions/${walletId}?limit=${limit}&offset=${offset}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch transactions");
+      }
+      const data: GetWalletTransactionsResponse = await response.json();
+      setTransactionsData(data);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    } finally {
+      setTransactionsLoading(false);
+    }
+  };
+
   const refreshWalletData = () => {
     if (selectedWallet) {
       setLoading(true);
@@ -48,6 +74,9 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
           console.error("Error fetching wallet data:", error);
           setLoading(false);
         });
+
+      // Fetch transactions separately
+      fetchTransactions(selectedWallet);
     }
   };
 
@@ -93,7 +122,15 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
           {!loading && walletData && (
             <>
               <WalletDisplay walletData={walletData} />
-              <TransactionHistory transactions={walletData.transactions} />
+              <TransactionHistory
+                transactionsData={transactionsData}
+                loading={transactionsLoading}
+                onPageChange={(limit, offset) => {
+                  if (selectedWallet) {
+                    fetchTransactions(selectedWallet, limit, offset);
+                  }
+                }}
+              />
             </>
           )}
         </div>

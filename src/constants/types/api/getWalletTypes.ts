@@ -69,7 +69,6 @@ export interface GetWalletResponse {
   __v: number;
   blockchainWalletId: BlockchainWallet[];
   manualTokens: ManualTokenBalance[];
-  transactions: Transaction[];
 }
 
 export interface GetWalletParams {
