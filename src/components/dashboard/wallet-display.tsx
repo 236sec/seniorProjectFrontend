@@ -54,6 +54,17 @@ interface AggregatedToken {
   image: string;
   totalBalance: bigint;
   portfolioPerformance?: PortfolioPerformance;
+  currentPrice: number;
+  priceChange24h: number;
+  currentValue: number;
+  pnlPercentage: number;
+}
+
+interface PortfolioSummary {
+  totalCurrentValue: number;
+  totalInvested: number;
+  totalPnlPercentage: number;
+  weighted24hChange: number;
 }
 
 function getAggregatedTokens(walletData: GetWalletResponse): AggregatedToken[] {
@@ -69,6 +80,13 @@ function getAggregatedTokens(walletData: GetWalletResponse): AggregatedToken[] {
       (p) => p.tokenId === token.tokenId
     );
 
+    // Calculate current value and PNL
+    const balanceNumber = parseFloat(Utils.formatUnits(token.balance, 18));
+    const currentValue = balanceNumber * tokenDetails.currentPrice;
+    const invested = performance?.totalInvestedAmount || 0;
+    const pnlPercentage =
+      invested > 0 ? ((currentValue - invested) / invested) * 100 : 0;
+
     tokenMap.set(tokenDetails.id, {
       id: tokenDetails.id,
       name: tokenDetails.name,
@@ -76,10 +94,45 @@ function getAggregatedTokens(walletData: GetWalletResponse): AggregatedToken[] {
       image: tokenDetails.image.small,
       totalBalance: currentBalance,
       portfolioPerformance: performance,
+      currentPrice: tokenDetails.currentPrice,
+      priceChange24h: tokenDetails.priceChange24h,
+      currentValue,
+      pnlPercentage,
     });
   });
 
   return Array.from(tokenMap.values());
+}
+
+function calculatePortfolioSummary(
+  tokens: AggregatedToken[]
+): PortfolioSummary {
+  let totalCurrentValue = 0;
+  let totalInvested = 0;
+  let weighted24hSum = 0;
+
+  tokens.forEach((token) => {
+    totalCurrentValue += token.currentValue;
+    totalInvested += token.portfolioPerformance?.totalInvestedAmount || 0;
+
+    // Weight the 24h change by the token's value
+    weighted24hSum += token.currentValue * token.priceChange24h;
+  });
+
+  const totalPnlPercentage =
+    totalInvested > 0
+      ? ((totalCurrentValue - totalInvested) / totalInvested) * 100
+      : 0;
+
+  const weighted24hChange =
+    totalCurrentValue > 0 ? weighted24hSum / totalCurrentValue : 0;
+
+  return {
+    totalCurrentValue,
+    totalInvested,
+    totalPnlPercentage,
+    weighted24hChange,
+  };
 }
 
 function TokenTable({
@@ -136,6 +189,7 @@ function TokenTable({
 
 export function WalletDisplay({ walletData }: WalletDisplayProps) {
   const aggregatedTokens = getAggregatedTokens(walletData);
+  const portfolioSummary = calculatePortfolioSummary(aggregatedTokens);
 
   return (
     <div className="space-y-6">
@@ -156,6 +210,63 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Portfolio Summary Stats */}
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex flex-col space-y-1">
+                <span className="text-sm text-muted-foreground">
+                  Total Value
+                </span>
+                <span className="text-2xl font-bold">
+                  $
+                  {portfolioSummary.totalCurrentValue.toLocaleString(
+                    undefined,
+                    {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }
+                  )}
+                </span>
+              </div>
+              <div className="flex flex-col space-y-1">
+                <span className="text-sm text-muted-foreground">Total PNL</span>
+                <span
+                  className={`text-2xl font-bold ${
+                    portfolioSummary.totalPnlPercentage >= 0
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {portfolioSummary.totalPnlPercentage >= 0 ? "+" : ""}
+                  {portfolioSummary.totalPnlPercentage.toFixed(2)}%
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {portfolioSummary.totalPnlPercentage >= 0 ? "+" : ""}$
+                  {(
+                    portfolioSummary.totalCurrentValue -
+                    portfolioSummary.totalInvested
+                  ).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+              <div className="flex flex-col space-y-1">
+                <span className="text-sm text-muted-foreground">
+                  24h Change
+                </span>
+                <span
+                  className={`text-2xl font-bold ${
+                    portfolioSummary.weighted24hChange >= 0
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {portfolioSummary.weighted24hChange >= 0 ? "+" : ""}
+                  {portfolioSummary.weighted24hChange.toFixed(2)}%
+                </span>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <div className="grid grid-cols-[1fr_100px_150px] px-4 text-sm font-medium text-muted-foreground">
                 <div>Asset</div>
@@ -195,11 +306,81 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
                             <div className="space-y-1 text-sm">
                               <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">
+                                  Current Price:
+                                </span>
+                                <span className="font-mono font-medium">
+                                  $
+                                  {token.currentPrice.toLocaleString(
+                                    undefined,
+                                    {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 6,
+                                    }
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">
+                                  24h Change:
+                                </span>
+                                <span
+                                  className={`font-mono font-medium ${
+                                    token.priceChange24h >= 0
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "text-red-600 dark:text-red-400"
+                                  }`}
+                                >
+                                  {token.priceChange24h >= 0 ? "+" : ""}
+                                  {token.priceChange24h.toFixed(2)}%
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">
+                                  Current Value:
+                                </span>
+                                <span className="font-mono font-medium">
+                                  $
+                                  {token.currentValue.toLocaleString(
+                                    undefined,
+                                    {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    }
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">
                                   Total Invested:
                                 </span>
                                 <span className="font-mono font-medium">
                                   $
                                   {token.portfolioPerformance.totalInvestedAmount.toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">
+                                  PNL:
+                                </span>
+                                <span
+                                  className={`font-mono font-medium ${
+                                    token.pnlPercentage >= 0
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "text-red-600 dark:text-red-400"
+                                  }`}
+                                >
+                                  {token.pnlPercentage >= 0 ? "+" : ""}
+                                  {token.pnlPercentage.toFixed(2)}% (
+                                  {token.pnlPercentage >= 0 ? "+" : ""}$
+                                  {(
+                                    token.currentValue -
+                                    token.portfolioPerformance
+                                      .totalInvestedAmount
+                                  ).toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                  )
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
@@ -218,7 +399,8 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
                                 <span className="font-mono">
                                   {formatBalance(
                                     token.portfolioPerformance.totalBalance
-                                  )}
+                                  )}{" "}
+                                  {token.symbol.toUpperCase()}
                                 </span>
                               </div>
                             </div>

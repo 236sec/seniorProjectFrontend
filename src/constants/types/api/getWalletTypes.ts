@@ -9,6 +9,8 @@ export interface TokenDetails {
     large: string;
     _id: string;
   };
+  currentPrice: number;
+  priceChange24h: number;
 }
 
 export interface BlockchainWallet {
