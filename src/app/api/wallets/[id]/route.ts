@@ -25,7 +25,7 @@ export async function GET(
       return Response.json({ error: "Wallet data not found" }, { status: 404 });
     }
 
-    if (walletData.userId !== session.user._id) {
+    if (walletData.wallet.userId !== session.user._id) {
       return Response.json(
         { error: "Forbidden - You do not have access to this wallet" },
         { status: 403 }
