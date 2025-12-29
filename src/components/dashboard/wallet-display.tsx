@@ -24,7 +24,7 @@ import {
 import {
   GetWalletResponse,
   ManualTokenBalance,
-  TokenBalance,
+  PortfolioPerformance,
 } from "@/constants/types/api/getWalletTypes";
 import { Utils } from "alchemy-sdk";
 import { ChevronRight, RefreshCw } from "lucide-react";
@@ -47,84 +47,47 @@ function formatBalance(balance: string): string {
   }
 }
 
-interface TokenSource {
-  sourceName: string;
-  sourceType: "manual" | "blockchain";
-  balance: bigint;
-}
-
 interface AggregatedToken {
   id: string;
   name: string;
   symbol: string;
   image: string;
   totalBalance: bigint;
-  sources: TokenSource[];
-}
-
-function getTokenDetails(token: TokenBalance | ManualTokenBalance) {
-  if ("tokenContractId" in token) {
-    return token.tokenContractId.tokenId;
-  }
-  return token.tokenId;
+  portfolioPerformance?: PortfolioPerformance;
 }
 
 function getAggregatedTokens(walletData: GetWalletResponse): AggregatedToken[] {
   const tokenMap = new Map<string, AggregatedToken>();
 
-  const processToken = (
-    token: TokenBalance | ManualTokenBalance,
-    sourceName: string,
-    sourceType: "manual" | "blockchain"
-  ) => {
-    const tokenDetails = getTokenDetails(token);
-    const currentBalance = BigInt(token.balance);
-
-    if (tokenMap.has(tokenDetails.id)) {
-      const existing = tokenMap.get(tokenDetails.id)!;
-      existing.totalBalance += currentBalance;
-      existing.sources.push({
-        sourceName,
-        sourceType,
-        balance: currentBalance,
-      });
-    } else {
-      tokenMap.set(tokenDetails.id, {
-        id: tokenDetails.id,
-        name: tokenDetails.name,
-        symbol: tokenDetails.symbol,
-        image: tokenDetails.image.small,
-        totalBalance: currentBalance,
-        sources: [
-          {
-            sourceName,
-            sourceType,
-            balance: currentBalance,
-          },
-        ],
-      });
-    }
-  };
-
-  // Process blockchain wallets
-  walletData.blockchainWalletId.forEach((wallet) => {
-    wallet.tokens.forEach((token) =>
-      processToken(token, wallet.address, "blockchain")
-    );
-  });
-
   // Process manual tokens
-  walletData.manualTokens.forEach((token) =>
-    processToken(token, "Manual Balance", "manual")
-  );
+  walletData.wallet.manualTokens.forEach((token) => {
+    const tokenDetails = walletData.tokens[token.tokenId];
+    if (!tokenDetails) return;
+
+    const currentBalance = BigInt(token.balance);
+    const performance = walletData.wallet.portfolioPerformance.find(
+      (p) => p.tokenId === token.tokenId
+    );
+
+    tokenMap.set(tokenDetails.id, {
+      id: tokenDetails.id,
+      name: tokenDetails.name,
+      symbol: tokenDetails.symbol,
+      image: tokenDetails.image.small,
+      totalBalance: currentBalance,
+      portfolioPerformance: performance,
+    });
+  });
 
   return Array.from(tokenMap.values());
 }
 
 function TokenTable({
   tokens,
+  tokensMap,
 }: {
-  tokens: (TokenBalance | ManualTokenBalance)[];
+  tokens: ManualTokenBalance[];
+  tokensMap: GetWalletResponse["tokens"];
 }) {
   if (!tokens || tokens.length === 0) {
     return (
@@ -143,7 +106,9 @@ function TokenTable({
       </TableHeader>
       <TableBody>
         {tokens.map((token, index) => {
-          const details = getTokenDetails(token);
+          const details = tokensMap[token.tokenId];
+          if (!details) return null;
+
           return (
             <TableRow key={details._id || index}>
               <TableCell className="flex items-center gap-2">
@@ -175,8 +140,10 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight">{walletData.name}</h2>
-        <p className="text-muted-foreground">{walletData.description}</p>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {walletData.wallet.name}
+        </h2>
+        <p className="text-muted-foreground">{walletData.wallet.description}</p>
       </div>
 
       <div className="grid gap-6">
@@ -224,36 +191,38 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <div className="border-t bg-muted/5 p-4 space-y-2">
-                          {token.sources.map((source, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center justify-between text-sm"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  variant={
-                                    source.sourceType === "manual"
-                                      ? "outline"
-                                      : "secondary"
-                                  }
-                                  className="text-xs"
-                                >
-                                  {source.sourceType === "manual"
-                                    ? "Manual"
-                                    : "Chain"}
-                                </Badge>
-                                <span className="text-muted-foreground font-mono text-xs truncate max-w-[200px]">
-                                  {source.sourceName}
+                          {token.portfolioPerformance && (
+                            <div className="space-y-1 text-sm">
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">
+                                  Total Invested:
+                                </span>
+                                <span className="font-mono font-medium">
+                                  $
+                                  {token.portfolioPerformance.totalInvestedAmount.toLocaleString()}
                                 </span>
                               </div>
-                              <span className="font-mono">
-                                {Utils.formatUnits(
-                                  source.balance.toString(),
-                                  18
-                                )}
-                              </span>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">
+                                  Total Cashflow:
+                                </span>
+                                <span className="font-mono font-medium">
+                                  $
+                                  {token.portfolioPerformance.totalCashflowUsd.toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">
+                                  Balance:
+                                </span>
+                                <span className="font-mono">
+                                  {formatBalance(
+                                    token.portfolioPerformance.totalBalance
+                                  )}
+                                </span>
+                              </div>
                             </div>
-                          ))}
+                          )}
                         </div>
                       </CollapsibleContent>
                     </div>
@@ -272,7 +241,7 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
         {/* Blockchain Wallets Section */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Connected Wallets</h3>
-          {walletData.blockchainWalletId.map((wallet) => (
+          {walletData.wallet.blockchainWalletId.map((wallet) => (
             <Card key={wallet._id}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -305,11 +274,14 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <TokenTable tokens={wallet.tokens} />
+                <div className="text-sm text-muted-foreground">
+                  No on-chain tokens tracked. Use manual balances to add
+                  holdings.
+                </div>
               </CardContent>
             </Card>
           ))}
-          {walletData.blockchainWalletId.length === 0 && (
+          {walletData.wallet.blockchainWalletId.length === 0 && (
             <div className="text-sm text-muted-foreground">
               No blockchain wallets connected.
             </div>
@@ -317,7 +289,7 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
         </div>
 
         {/* Manual Tokens Section */}
-        {walletData.manualTokens.length > 0 && (
+        {walletData.wallet.manualTokens.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Manual Holdings</h3>
             <Card>
@@ -328,7 +300,10 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <TokenTable tokens={walletData.manualTokens} />
+                <TokenTable
+                  tokens={walletData.wallet.manualTokens}
+                  tokensMap={walletData.tokens}
+                />
               </CardContent>
             </Card>
           </div>

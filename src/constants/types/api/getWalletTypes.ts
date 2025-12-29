@@ -11,64 +11,47 @@ export interface TokenDetails {
   };
 }
 
-export interface TokenContract {
-  _id: string;
-  tokenId: TokenDetails;
-  coinGeckoId: string;
-  chainId: string;
-  contractAddress: string;
-  symbol: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
-
-export interface TokenBalance {
-  tokenContractId: TokenContract;
-  balance: string;
-}
-
-export interface ManualTokenBalance {
-  tokenId: TokenDetails;
-  balance: string;
-}
-
 export interface BlockchainWallet {
   _id: string;
   address: string;
   chains: string[];
-  tokens: TokenBalance[];
+  tokens: never[]; // Empty array in the new API
   createdAt: string;
   updatedAt: string;
-  __v: number;
 }
 
-export interface Transaction {
-  _id: string;
-  walletId: string;
-  type: string;
-  event_type: string;
-  tokenId: TokenDetails;
-  quantity: string;
-  price_usd: number;
-  cashflow_usd: number;
-  timestamp: string;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
+export interface ManualTokenBalance {
+  tokenId: string; // Reference to token ID (not populated)
+  balance: string;
 }
 
-export interface GetWalletResponse {
+export interface PortfolioPerformance {
+  tokenId: string;
+  totalInvestedAmount: number;
+  totalBalance: string;
+  totalCashflowUsd: number;
+}
+
+export interface Wallet {
   _id: string;
   userId: string;
   name: string;
   description: string;
+  blockchainWalletId: BlockchainWallet[];
+  manualTokens: ManualTokenBalance[];
+  portfolioPerformance: PortfolioPerformance[];
   createdAt: string;
   updatedAt: string;
   __v: number;
-  blockchainWalletId: BlockchainWallet[];
-  manualTokens: ManualTokenBalance[];
+}
+
+export interface TokensMap {
+  [tokenId: string]: TokenDetails;
+}
+
+export interface GetWalletResponse {
+  wallet: Wallet;
+  tokens: TokensMap;
 }
 
 export interface GetWalletParams {
