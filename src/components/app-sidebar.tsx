@@ -35,8 +35,13 @@ const data = {
       icon: BookOpen,
     },
     {
-      title: "Settings",
-      url: "/settings",
+      title: "Wallet Inspector",
+      url: "/wallet-inspector",
+      icon: Settings2,
+    },
+    {
+      title: "Mock Coin Data",
+      url: "/coins/bitcoin",
       icon: Settings2,
     },
   ],

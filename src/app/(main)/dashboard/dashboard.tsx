@@ -1,6 +1,5 @@
 "use client";
 import { AddBlockchainWalletDialog } from "@/components/dashboard/add-blockchain-wallet-dialog";
-import { AddressBalanceChecker } from "@/components/dashboard/address-balance-checker";
 import { CreateTransactionDialog } from "@/components/dashboard/create-transaction-dialog";
 import { TransactionHistory } from "@/components/dashboard/transaction-history";
 import { WalletDisplay } from "@/components/dashboard/wallet-display";
@@ -133,9 +132,6 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
               />
             </>
           )}
-        </div>
-        <div>
-          <AddressBalanceChecker />
         </div>
       </div>
     </div>
