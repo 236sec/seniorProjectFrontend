@@ -1,6 +1,6 @@
 "use client";
 
-import { getHistoricalChart } from "@/services/gecko/getHistoricalChart";
+import { getHistoricalPrices } from "@/services/getHistoricalPrices";
 import * as React from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
@@ -65,17 +65,14 @@ export function ChartAreaInteractive({
       setLoading(true);
       const days = timeRange === "30d" ? 30 : timeRange === "7d" ? 7 : 90;
       try {
-        const data = await getHistoricalChart(
-          { id: coinId, days, vs_currency: "usd" },
-          360
-        );
+        const data = await getHistoricalPrices({ id: coinId, days });
 
         if (data && data.prices) {
-          const formattedData = data.prices.map((price, index) => ({
-            date: price[0],
-            price: price[1],
-            market_cap: data.market_caps[index]?.[1] ?? 0,
-            volume: data.total_volumes[index]?.[1] ?? 0,
+          const formattedData = data.prices.map((item) => ({
+            date: new Date(item.date).getTime(),
+            price: item.price,
+            market_cap: item.market_cap,
+            volume: item.volume_24h,
           }));
           setChartData(formattedData);
         } else {

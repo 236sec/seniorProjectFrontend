@@ -24,115 +24,18 @@ import {
 import {
   GetWalletResponse,
   ManualTokenBalance,
-  PortfolioPerformance,
 } from "@/constants/types/api/getWalletTypes";
+import {
+  calculatePortfolioSummary,
+  formatBalance,
+  formatPercentage,
+  getAggregatedTokens,
+} from "@/lib/portfolio-utils";
 import { Utils } from "alchemy-sdk";
 import { ChevronRight, RefreshCw } from "lucide-react";
 
 interface WalletDisplayProps {
   walletData: GetWalletResponse;
-}
-
-function formatBalance(balance: string): string {
-  try {
-    // Check if it's a hex string
-    if (balance.startsWith("0x")) {
-      // Assuming 18 decimals for now as we don't have it in the type
-      return Utils.formatUnits(balance, 18);
-    }
-    return balance;
-  } catch (e) {
-    void e;
-    return balance;
-  }
-}
-
-interface AggregatedToken {
-  id: string;
-  name: string;
-  symbol: string;
-  image: string;
-  totalBalance: bigint;
-  portfolioPerformance?: PortfolioPerformance;
-  currentPrice: number;
-  priceChange24h: number;
-  currentValue: number;
-  pnlPercentage: number;
-}
-
-interface PortfolioSummary {
-  totalCurrentValue: number;
-  totalInvested: number;
-  totalPnlPercentage: number;
-  weighted24hChange: number;
-}
-
-function getAggregatedTokens(walletData: GetWalletResponse): AggregatedToken[] {
-  const tokenMap = new Map<string, AggregatedToken>();
-
-  // Process manual tokens
-  walletData.wallet.manualTokens.forEach((token) => {
-    const tokenDetails = walletData.tokens[token.tokenId];
-    if (!tokenDetails) return;
-
-    const currentBalance = BigInt(token.balance);
-    const performance = walletData.wallet.portfolioPerformance.find(
-      (p) => p.tokenId === token.tokenId
-    );
-
-    // Calculate current value and PNL
-    const balanceNumber = parseFloat(Utils.formatUnits(token.balance, 18));
-    const currentValue = balanceNumber * tokenDetails.currentPrice;
-    const invested = performance?.totalInvestedAmount || 0;
-    const pnlPercentage =
-      invested > 0 ? ((currentValue - invested) / invested) * 100 : 0;
-
-    tokenMap.set(tokenDetails.id, {
-      id: tokenDetails.id,
-      name: tokenDetails.name,
-      symbol: tokenDetails.symbol,
-      image: tokenDetails.image.small,
-      totalBalance: currentBalance,
-      portfolioPerformance: performance,
-      currentPrice: tokenDetails.currentPrice,
-      priceChange24h: tokenDetails.priceChange24h,
-      currentValue,
-      pnlPercentage,
-    });
-  });
-
-  return Array.from(tokenMap.values());
-}
-
-function calculatePortfolioSummary(
-  tokens: AggregatedToken[]
-): PortfolioSummary {
-  let totalCurrentValue = 0;
-  let totalInvested = 0;
-  let weighted24hSum = 0;
-
-  tokens.forEach((token) => {
-    totalCurrentValue += token.currentValue;
-    totalInvested += token.portfolioPerformance?.totalInvestedAmount || 0;
-
-    // Weight the 24h change by the token's value
-    weighted24hSum += token.currentValue * token.priceChange24h;
-  });
-
-  const totalPnlPercentage =
-    totalInvested > 0
-      ? ((totalCurrentValue - totalInvested) / totalInvested) * 100
-      : 0;
-
-  const weighted24hChange =
-    totalCurrentValue > 0 ? weighted24hSum / totalCurrentValue : 0;
-
-  return {
-    totalCurrentValue,
-    totalInvested,
-    totalPnlPercentage,
-    weighted24hChange,
-  };
 }
 
 function TokenTable({
@@ -236,15 +139,11 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
                       : "text-red-600 dark:text-red-400"
                   }`}
                 >
-                  {portfolioSummary.totalPnlPercentage >= 0 ? "+" : ""}
-                  {portfolioSummary.totalPnlPercentage.toFixed(2)}%
+                  {formatPercentage(portfolioSummary.totalPnlPercentage)}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {portfolioSummary.totalPnlPercentage >= 0 ? "+" : ""}$
-                  {(
-                    portfolioSummary.totalCurrentValue -
-                    portfolioSummary.totalInvested
-                  ).toLocaleString(undefined, {
+                  {portfolioSummary.totalPnlAmount >= 0 ? "+" : ""}$
+                  {portfolioSummary.totalPnlAmount.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
@@ -364,19 +263,14 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
                                 </span>
                                 <span
                                   className={`font-mono font-medium ${
-                                    token.pnlPercentage >= 0
+                                    token.pnlAmount >= 0
                                       ? "text-green-600 dark:text-green-400"
                                       : "text-red-600 dark:text-red-400"
                                   }`}
                                 >
-                                  {token.pnlPercentage >= 0 ? "+" : ""}
-                                  {token.pnlPercentage.toFixed(2)}% (
-                                  {token.pnlPercentage >= 0 ? "+" : ""}$
-                                  {(
-                                    token.currentValue -
-                                    token.portfolioPerformance
-                                      .totalInvestedAmount
-                                  ).toLocaleString(undefined, {
+                                  {formatPercentage(token.pnlPercentage)} (
+                                  {token.pnlAmount >= 0 ? "+" : ""}$
+                                  {token.pnlAmount.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2,
                                   })}
