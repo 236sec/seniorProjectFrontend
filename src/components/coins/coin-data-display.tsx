@@ -4,16 +4,23 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GetCoinData } from "@/constants/types/api/gecko/getCoinTypes";
+import { GetSimplePriceData } from "@/constants/types/api/gecko/getSimplePriceTypes";
 import { use } from "react";
 
 interface CoinDataDisplayProps {
-  coinDataPromise: Promise<GetCoinData | undefined>;
+  coinDataPromise: Promise<
+    | {
+        coinData: GetCoinData | undefined;
+        simplePriceData: GetSimplePriceData | undefined;
+      }
+    | undefined
+  >;
 }
 
 export function CoinDataDisplay({ coinDataPromise }: CoinDataDisplayProps) {
-  const coinData = use(coinDataPromise);
+  const data = use(coinDataPromise);
 
-  if (!coinData) {
+  if (!data || !data.coinData) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -23,6 +30,9 @@ export function CoinDataDisplay({ coinDataPromise }: CoinDataDisplayProps) {
     );
   }
 
+  const { coinData, simplePriceData } = data;
+  const priceData = simplePriceData?.[coinData.id];
+
   return (
     <Card>
       <CardHeader>
@@ -31,16 +41,70 @@ export function CoinDataDisplay({ coinDataPromise }: CoinDataDisplayProps) {
             <AvatarImage src={coinData.image.large} alt={coinData.name} />
             <AvatarFallback>{coinData.symbol.toUpperCase()}</AvatarFallback>
           </Avatar>
-          <div>
+          <div className="flex-1">
             <CardTitle className="text-2xl">{coinData.name}</CardTitle>
             <p className="text-muted-foreground">
               {coinData.symbol.toUpperCase()}
             </p>
           </div>
+          {priceData && (
+            <div className="text-right">
+              <div className="text-2xl font-bold">
+                ${priceData.usd.toLocaleString()}
+              </div>
+              {priceData.usd_24h_change !== undefined && (
+                <div
+                  className={`text-sm ${
+                    priceData.usd_24h_change >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {priceData.usd_24h_change >= 0 ? "↑" : "↓"}{" "}
+                  {Math.abs(priceData.usd_24h_change).toFixed(2)}%
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">
+          {/* Price Data */}
+          {priceData && (
+            <div className="grid gap-2 rounded-lg border p-4">
+              <h3 className="text-sm font-semibold">Market Data</h3>
+              <div className="grid gap-2 text-sm">
+                {priceData.usd_market_cap !== undefined && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Market Cap</span>
+                    <span className="font-medium">
+                      ${priceData.usd_market_cap.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {priceData.usd_24h_vol !== undefined && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">24h Volume</span>
+                    <span className="font-medium">
+                      ${priceData.usd_24h_vol.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {priceData.last_updated_at && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Last Updated</span>
+                    <span className="font-medium">
+                      {new Date(
+                        priceData.last_updated_at * 1000
+                      ).toLocaleTimeString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Market Cap Rank */}
           {coinData.market_cap_rank && (
             <div className="flex items-center justify-between">
