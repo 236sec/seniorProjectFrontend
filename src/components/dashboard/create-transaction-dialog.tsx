@@ -44,6 +44,12 @@ export function CreateTransactionDialog({
   const [quantity, setQuantity] = useState("");
   const [priceUsd, setPriceUsd] = useState("");
   const [cashflowUsd, setCashflowUsd] = useState("");
+  const [timestamp, setTimestamp] = useState(() => {
+    // Set default to current date/time in local timezone
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  });
 
   // Auto-calculate cashflow when quantity or price changes
   useEffect(() => {
@@ -85,7 +91,7 @@ export function CreateTransactionDialog({
           quantity: hexQuantity,
           price_usd: priceUsd ? parseFloat(priceUsd) : undefined,
           cashflow_usd: cashflowUsd ? parseFloat(cashflowUsd) : undefined,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date(timestamp).toISOString(),
         }),
       });
 
@@ -99,6 +105,10 @@ export function CreateTransactionDialog({
       setPriceUsd("");
       setCashflowUsd("");
       setSelectedToken(null);
+      // Reset timestamp to current date/time
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      setTimestamp(now.toISOString().slice(0, 16));
 
       if (onTransactionCreated) {
         onTransactionCreated();
@@ -190,6 +200,19 @@ export function CreateTransactionDialog({
               readOnly
               className="bg-muted"
               placeholder="Auto-calculated"
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="timestamp" className="text-sm font-medium">
+              Date & Time
+            </label>
+            <Input
+              id="timestamp"
+              type="datetime-local"
+              value={timestamp}
+              onChange={(e) => setTimestamp(e.target.value)}
+              required
             />
           </div>
 

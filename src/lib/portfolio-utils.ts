@@ -86,7 +86,7 @@ export function getAggregatedTokens(
       id: tokenDetails.id,
       name: tokenDetails.name,
       symbol: tokenDetails.symbol,
-      image: tokenDetails.image.small,
+      image: tokenDetails.image?.small || "",
       totalBalance: currentBalance,
       portfolioPerformance: performance,
       currentPrice: tokenDetails.currentPrice,

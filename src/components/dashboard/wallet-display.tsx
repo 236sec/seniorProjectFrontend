@@ -69,7 +69,7 @@ function TokenTable({
             <TableRow key={details._id || index}>
               <TableCell className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={details.image.small} alt={details.name} />
+                  <AvatarImage src={details.image?.small} alt={details.name} />
                   <AvatarFallback>
                     {details.symbol.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
