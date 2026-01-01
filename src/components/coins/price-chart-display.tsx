@@ -106,11 +106,7 @@ export function PriceChartDisplay({ chartData }: PriceChartDisplayProps) {
   }
 
   return (
-    <ChartContainer
-      config={chartConfig}
-      className="aspect-auto h-62.5 w-full"
-      style={{ height: "500px" }}
-    >
+    <ChartContainer config={chartConfig} className="aspect-auto h-62.5 w-full">
       <AreaChart data={chartData}>
         <defs>
           <linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1">
