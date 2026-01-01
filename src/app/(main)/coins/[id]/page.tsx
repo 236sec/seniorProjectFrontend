@@ -1,4 +1,4 @@
-import { ChartAreaInteractive } from "@/components/chart";
+import { ChartAreaInteractive } from "@/components/coins/chart";
 
 export default async function CoinPage({
   params,
