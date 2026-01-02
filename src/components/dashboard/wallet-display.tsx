@@ -224,13 +224,13 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
                                 </span>
                                 <span
                                   className={`font-mono font-medium ${
-                                    token.priceChange24h >= 0
+                                    token.priceChange24h !== null && token.priceChange24h >= 0
                                       ? "text-green-600 dark:text-green-400"
                                       : "text-red-600 dark:text-red-400"
                                   }`}
                                 >
-                                  {token.priceChange24h >= 0 ? "+" : ""}
-                                  {token.priceChange24h.toFixed(2)}%
+                                  {token.priceChange24h !== null && token.priceChange24h >= 0 ? "+" : ""}
+                                  {token.priceChange24h !== null ? token.priceChange24h.toFixed(2) : "N/A"}%
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">

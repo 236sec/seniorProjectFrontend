@@ -13,6 +13,8 @@ export async function GET(
 ): Promise<Response> {
   try {
     const { address } = await params;
+    const { searchParams } = new URL(request.url);
+    const chainsParam = searchParams.get("chains");
 
     // Validate address format
     if (!address || !address.startsWith("0x") || address.length !== 42) {
@@ -22,7 +24,10 @@ export async function GET(
       );
     }
 
-    const data = await getData({ address }, 60);
+    // Parse chains parameter
+    const chains = chainsParam ? chainsParam.split(",") : undefined;
+
+    const data = await getData({ address, chains }, 60);
 
     if (!data) {
       return Response.json(

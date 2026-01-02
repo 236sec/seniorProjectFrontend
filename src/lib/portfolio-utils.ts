@@ -12,7 +12,7 @@ export interface AggregatedToken {
   totalBalance: bigint;
   portfolioPerformance?: PortfolioPerformance;
   currentPrice: number;
-  priceChange24h: number;
+  priceChange24h: number | null;
   currentValue: number;
   pnlAmount: number;
   pnlPercentage: number;
@@ -119,7 +119,10 @@ export function calculatePortfolioSummary(
     totalCashflow += token.portfolioPerformance?.totalCashflowUsd || 0;
 
     // Weight the 24h change by the token's value
-    weighted24hSum += token.currentValue * token.priceChange24h;
+    // Only include tokens with valid priceChange24h data
+    if (token.priceChange24h !== null) {
+      weighted24hSum += token.currentValue * token.priceChange24h;
+    }
   });
 
   // PNL = Current Value + Total Cashflow

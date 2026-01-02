@@ -10,7 +10,7 @@ export interface TokenDetails {
     _id: string;
   };
   currentPrice: number;
-  priceChange24h: number;
+  priceChange24h: number | null;
 }
 
 export interface BlockchainWallet {
