@@ -3,7 +3,7 @@ import { AddBlockchainWalletDialog } from "@/components/dashboard/add-blockchain
 import { CreateTransactionDialog } from "@/components/dashboard/create-transaction-dialog";
 import { TransactionHistory } from "@/components/dashboard/transaction-history";
 import { WalletDisplay } from "@/components/dashboard/wallet-display";
-import { WalletDropdown } from "@/components/wallet-dropdown";
+import { WalletDropdown } from "@/components/dashboard/wallet-dropdown";
 import { GetUserResponse } from "@/constants/types/api/getUserTypes";
 import { GetWalletTransactionsResponse } from "@/constants/types/api/getWalletTransactionsTypes";
 import { GetWalletResponse } from "@/constants/types/api/getWalletTypes";
