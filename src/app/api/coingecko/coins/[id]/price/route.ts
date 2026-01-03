@@ -1,37 +1,23 @@
-import { getCoin } from "@/services/gecko/getCoin";
 import { getSimplePrice } from "@/services/gecko/getSimplePrice";
 import { NextResponse } from "next/server";
 
 async function getData(
-  coinParams: Parameters<typeof getCoin>[0],
   simplePriceParams: Parameters<typeof getSimplePrice>[0],
   ttl: number
 ) {
-  const [coinData, simplePriceData] = await Promise.all([
-    getCoin(coinParams, ttl),
+  const [simplePriceData] = await Promise.all([
     getSimplePrice(simplePriceParams, ttl),
   ]);
   return {
-    coinData,
     simplePriceData,
   };
 }
 
 export async function GET(
   req: Request,
-  ctx: RouteContext<"/api/coingecko/coins/[id]">
+  ctx: RouteContext<"/api/coingecko/coins/[id]/price">
 ) {
   const { id } = await ctx.params;
-  const coinParameters: Parameters<typeof getCoin>[0] = {
-    id,
-    localization: false,
-    tickers: false,
-    market_data: true,
-    community_data: false,
-    developer_data: false,
-    sparkline: false,
-    dex_pair_format: "contract_address",
-  };
   const simplePriceParameters: Parameters<typeof getSimplePrice>[0] = {
     ids: [id],
     vs_currencies: ["usd"],
@@ -44,7 +30,7 @@ export async function GET(
     include_last_updated_at: true,
     precision: "18",
   };
-  const res = await getData(coinParameters, simplePriceParameters, 300);
+  const res = await getData(simplePriceParameters, 300);
   if (!res) {
     return NextResponse.json(
       { error: "Failed to fetch market data" },

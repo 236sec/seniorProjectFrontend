@@ -37,6 +37,7 @@ export function CreateTransactionDialog({
 }: CreateTransactionDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fetchingPrice, setFetchingPrice] = useState(false);
   const [eventType, setEventType] = useState<TransactionEventType>(
     TransactionEventType.DEPOSIT
   );
@@ -56,11 +57,44 @@ export function CreateTransactionDialog({
     const qty = parseFloat(quantity);
     const price = parseFloat(priceUsd);
     if (!isNaN(qty) && !isNaN(price)) {
-      setCashflowUsd((qty * price).toFixed(2));
+      const total = qty * price;
+      setCashflowUsd(total.toPrecision(18));
     } else {
       setCashflowUsd("");
     }
   }, [quantity, priceUsd]);
+
+  const handleFetchCurrentPrice = async () => {
+    if (!selectedToken) {
+      alert("Please select a token first");
+      return;
+    }
+
+    setFetchingPrice(true);
+    try {
+      const response = await fetch(
+        `${getBaseUrl()}/api/coingecko/coins/${selectedToken.id}/price`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch current price");
+      }
+
+      const data = await response.json();
+      const tokenPrice = data.simplePriceData?.[selectedToken.id]?.usd;
+
+      if (tokenPrice) {
+        setPriceUsd(tokenPrice.toString());
+      } else {
+        alert("Price not available for this token");
+      }
+    } catch (error) {
+      console.error("Error fetching current price:", error);
+      alert("Failed to fetch current price");
+    } finally {
+      setFetchingPrice(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +160,7 @@ export function CreateTransactionDialog({
       <DialogTrigger asChild>
         <Button>Add Transaction</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>Create Manual Transaction</DialogTitle>
         </DialogHeader>
@@ -176,29 +210,50 @@ export function CreateTransactionDialog({
 
           <div className="grid gap-2">
             <label htmlFor="price-usd" className="text-sm font-medium">
-              Price (USD)
+              Avg.Price (USD)
             </label>
-            <Input
-              id="price-usd"
-              type="number"
-              step="any"
-              value={priceUsd}
-              onChange={(e) => setPriceUsd(e.target.value)}
-              placeholder="0.00"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="price-usd"
+                type="text"
+                inputMode="decimal"
+                value={priceUsd}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow numbers, decimals, and scientific notation
+                  if (
+                    value === "" ||
+                    /^-?\d*\.?\d*([eE][-+]?\d*)?$/.test(value)
+                  ) {
+                    setPriceUsd(value);
+                  }
+                }}
+                placeholder="0.00"
+                className="flex-1 font-mono"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleFetchCurrentPrice}
+                disabled={!selectedToken || fetchingPrice}
+                className="whitespace-nowrap"
+              >
+                {fetchingPrice ? "Loading..." : "Current Price"}
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-2">
             <label htmlFor="cashflow-usd" className="text-sm font-medium">
-              Cashflow (USD)
+              Total (USD)
             </label>
             <Input
               id="cashflow-usd"
-              type="number"
-              step="any"
+              type="text"
               value={cashflowUsd}
               readOnly
-              className="bg-muted"
+              disabled
+              className="bg-muted font-mono"
               placeholder="Auto-calculated"
             />
           </div>

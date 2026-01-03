@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GetCoinData } from "@/constants/types/api/gecko/getCoinTypes";
 import { GetSimplePriceData } from "@/constants/types/api/gecko/getSimplePriceTypes";
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 
 interface CoinDataDisplayProps {
   coinDataPromise: Promise<
@@ -32,6 +32,24 @@ export function CoinDataDisplay({ coinDataPromise }: CoinDataDisplayProps) {
 
   const { coinData, simplePriceData } = data;
   const priceData = simplePriceData?.[coinData.id];
+  const [formattedDate, setFormattedDate] = useState<string | null>(null);
+  const [formattedDateCoinData, setFormattedDateCoinData] = useState<
+    string | null
+  >(null);
+
+  useEffect(() => {
+    if (priceData && priceData.last_updated_at) {
+      const date = new Date(priceData.last_updated_at * 1000);
+      setFormattedDate(date.toLocaleString());
+    }
+  }, [priceData]);
+
+  useEffect(() => {
+    if (coinData.last_updated) {
+      const date = new Date(coinData.last_updated);
+      setFormattedDateCoinData(date.toLocaleString());
+    }
+  }, [coinData]);
 
   return (
     <Card>
@@ -94,11 +112,7 @@ export function CoinDataDisplay({ coinDataPromise }: CoinDataDisplayProps) {
                 {priceData.last_updated_at && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Last Updated</span>
-                    <span className="font-medium">
-                      {new Date(
-                        priceData.last_updated_at * 1000
-                      ).toLocaleTimeString()}
-                    </span>
+                    <span className="font-medium">{formattedDate}</span>
                   </div>
                 )}
               </div>
@@ -187,7 +201,7 @@ export function CoinDataDisplay({ coinDataPromise }: CoinDataDisplayProps) {
           {/* Last Updated */}
           {coinData.last_updated && (
             <div className="border-t pt-4 text-xs text-muted-foreground">
-              Last updated: {new Date(coinData.last_updated).toLocaleString()}
+              Last updated: {formattedDateCoinData}
             </div>
           )}
         </div>
