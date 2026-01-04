@@ -1,6 +1,4 @@
 "use client";
-import { AddBlockchainWalletDialog } from "@/components/dashboard/add-blockchain-wallet-dialog";
-import { CreateTransactionDialog } from "@/components/dashboard/create-transaction-dialog";
 import { TransactionHistory } from "@/components/dashboard/transaction-history";
 import { WalletDisplay } from "@/components/dashboard/wallet-display";
 import { WalletDropdown } from "@/components/dashboard/wallet-dropdown";
@@ -39,6 +37,7 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
     useState<GetWalletTransactionsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
+
   const fetchTransactions = async (
     walletId: string,
     limit = 10,
@@ -64,13 +63,16 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
   const refreshWalletData = () => {
     if (selectedWallet) {
       setLoading(true);
+      setTransactionsLoading(true);
+
       fetchWalletData(selectedWallet)
         .then((data) => {
           setWalletData(data);
-          setLoading(false);
         })
         .catch((error) => {
           console.error("Error fetching wallet data:", error);
+        })
+        .finally(() => {
           setLoading(false);
         });
 
@@ -85,23 +87,10 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Your Wallets</h3>
+          <div className="flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
-              {selectedWallet && (
-                <>
-                  <AddBlockchainWalletDialog
-                    walletId={selectedWallet}
-                    onWalletAdded={refreshWalletData}
-                  />
-                  <CreateTransactionDialog
-                    walletId={selectedWallet}
-                    onTransactionCreated={refreshWalletData}
-                  />
-                </>
-              )}
               <WalletDropdown
                 walletData={userData?.wallets}
                 selectedWallet={selectedWallet}
@@ -110,28 +99,20 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
             </div>
           </div>
 
-          {loading && (
-            <div className="flex items-center justify-center p-8 border rounded-lg bg-muted/10">
-              <div className="text-muted-foreground">
-                Loading wallet data...
-              </div>
-            </div>
-          )}
-
-          {!loading && walletData && (
-            <>
-              <WalletDisplay walletData={walletData} />
-              <TransactionHistory
-                transactionsData={transactionsData}
-                loading={transactionsLoading}
-                onPageChange={(limit, offset) => {
-                  if (selectedWallet) {
-                    fetchTransactions(selectedWallet, limit, offset);
-                  }
-                }}
-              />
-            </>
-          )}
+          <WalletDisplay
+            walletData={walletData}
+            loading={loading}
+            refreshWalletData={refreshWalletData}
+          />
+          <TransactionHistory
+            transactionsData={transactionsData}
+            loading={transactionsLoading}
+            onPageChange={(limit, offset) => {
+              if (selectedWallet) {
+                fetchTransactions(selectedWallet, limit, offset);
+              }
+            }}
+          />
         </div>
       </div>
     </div>

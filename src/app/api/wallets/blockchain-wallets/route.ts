@@ -1,3 +1,4 @@
+import { AVAILABLE_CHAINS } from "@/constants/enum/AlchemyChain";
 import { addBlockchainWallet } from "@/services/addBlockchainWallet";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -6,7 +7,7 @@ const requestSchema = z.object({
   walletId: z.string(),
   address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid Ethereum address"),
   chains: z
-    .array(z.enum(["eth-sepolia", "opt-mainnet"]))
+    .array(z.enum(AVAILABLE_CHAINS as [string, ...string[]]))
     .min(1, "Select at least one chain"),
 });
 

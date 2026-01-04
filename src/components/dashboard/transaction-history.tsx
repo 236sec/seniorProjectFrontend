@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -53,18 +54,21 @@ export function TransactionHistory({
   };
 
   return (
-    <Card>
+    <Card className="min-w-25 w-full">
       <CardHeader>
         <CardTitle>Transaction History</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex items-center justify-center p-8">
-            <div className="text-muted-foreground">Loading transactions...</div>
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-full" />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-16" />
+            ))}
           </div>
         ) : (
           <>
-            <Table>
+            <Table className="w-full">
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
@@ -72,7 +76,6 @@ export function TransactionHistory({
                   <TableHead>Type</TableHead>
                   <TableHead>Event</TableHead>
                   <TableHead>Quantity</TableHead>
-                  <TableHead>Note</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -110,9 +113,6 @@ export function TransactionHistory({
                       <TableCell>{tx.type}</TableCell>
                       <TableCell>{tx.event_type}</TableCell>
                       <TableCell>{formatQuantity(tx.quantity)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {tx.note || "-"}
-                      </TableCell>
                     </TableRow>
                   ))
                 ) : (

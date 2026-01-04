@@ -153,3 +153,12 @@
     --chart-5: oklch(0.645 0.246 16.439);
   }
 }
+
+html {
+  overscroll-behavior: none;
+}
+
+body {
+  overscroll-behavior: none;
+  min-height: 100vh;
+}

@@ -9,6 +9,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  AlchemyChain,
+  AVAILABLE_CHAINS,
+  CHAIN_DISPLAY_NAMES,
+} from "@/constants/enum/AlchemyChain";
 import { getBaseUrl } from "@/env";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
@@ -19,11 +24,6 @@ interface AddBlockchainWalletDialogProps {
   onWalletAdded?: () => void;
 }
 
-const SUPPORTED_CHAINS = [
-  { id: "eth-sepolia", label: "Ethereum Sepolia" },
-  { id: "opt-mainnet", label: "Optimism Mainnet" },
-];
-
 export function AddBlockchainWalletDialog({
   walletId,
   onWalletAdded,
@@ -31,9 +31,9 @@ export function AddBlockchainWalletDialog({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState("");
-  const [selectedChains, setSelectedChains] = useState<string[]>([]);
+  const [selectedChains, setSelectedChains] = useState<AlchemyChain[]>([]);
 
-  const toggleChain = (chainId: string) => {
+  const toggleChain = (chainId: AlchemyChain) => {
     setSelectedChains((prev) =>
       prev.includes(chainId)
         ? prev.filter((id) => id !== chainId)
@@ -118,18 +118,20 @@ export function AddBlockchainWalletDialog({
           <div className="grid gap-2">
             <label className="text-sm font-medium">Select Chains</label>
             <div className="grid grid-cols-2 gap-2">
-              {SUPPORTED_CHAINS.map((chain) => (
+              {AVAILABLE_CHAINS.map((chain) => (
                 <div
-                  key={chain.id}
+                  key={chain}
                   className={cn(
                     "flex items-center justify-between rounded-md border p-3 cursor-pointer transition-colors hover:bg-muted/50",
-                    selectedChains.includes(chain.id) &&
+                    selectedChains.includes(chain) &&
                       "border-primary bg-primary/5"
                   )}
-                  onClick={() => toggleChain(chain.id)}
+                  onClick={() => toggleChain(chain)}
                 >
-                  <span className="text-sm font-medium">{chain.label}</span>
-                  {selectedChains.includes(chain.id) && (
+                  <span className="text-sm font-medium">
+                    {CHAIN_DISPLAY_NAMES[chain]}
+                  </span>
+                  {selectedChains.includes(chain) && (
                     <Check className="h-4 w-4 text-primary" />
                   )}
                 </div>

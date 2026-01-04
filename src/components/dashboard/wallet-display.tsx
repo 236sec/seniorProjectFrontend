@@ -13,6 +13,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -33,9 +34,13 @@ import {
 } from "@/lib/portfolio-utils";
 import { Utils } from "alchemy-sdk";
 import { ChevronRight, RefreshCw } from "lucide-react";
+import { AddBlockchainWalletDialog } from "./add-blockchain-wallet-dialog";
+import { CreateTransactionDialog } from "./create-transaction-dialog";
 
 interface WalletDisplayProps {
-  walletData: GetWalletResponse;
+  walletData: GetWalletResponse | null;
+  loading?: boolean;
+  refreshWalletData: () => void;
 }
 
 function TokenTable({
@@ -90,7 +95,32 @@ function TokenTable({
   );
 }
 
-export function WalletDisplay({ walletData }: WalletDisplayProps) {
+export function WalletDisplay({
+  walletData,
+  loading = false,
+  refreshWalletData,
+}: WalletDisplayProps) {
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-full" />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-[300px] w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!walletData) return null;
+
   const aggregatedTokens = getAggregatedTokens(walletData);
   const portfolioSummary = calculatePortfolioSummary(aggregatedTokens);
 
@@ -224,13 +254,20 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
                                 </span>
                                 <span
                                   className={`font-mono font-medium ${
-                                    token.priceChange24h !== null && token.priceChange24h >= 0
+                                    token.priceChange24h !== null &&
+                                    token.priceChange24h >= 0
                                       ? "text-green-600 dark:text-green-400"
                                       : "text-red-600 dark:text-red-400"
                                   }`}
                                 >
-                                  {token.priceChange24h !== null && token.priceChange24h >= 0 ? "+" : ""}
-                                  {token.priceChange24h !== null ? token.priceChange24h.toFixed(2) : "N/A"}%
+                                  {token.priceChange24h !== null &&
+                                  token.priceChange24h >= 0
+                                    ? "+"
+                                    : ""}
+                                  {token.priceChange24h !== null
+                                    ? token.priceChange24h.toFixed(2)
+                                    : "N/A"}
+                                  %
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
@@ -313,6 +350,10 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
             </div>
           </CardContent>
         </Card>
+        <CreateTransactionDialog
+          walletId={walletData.wallet._id}
+          onTransactionCreated={refreshWalletData}
+        />
 
         {/* Blockchain Wallets Section */}
         <div className="space-y-4">
@@ -362,6 +403,10 @@ export function WalletDisplay({ walletData }: WalletDisplayProps) {
               No blockchain wallets connected.
             </div>
           )}
+          <AddBlockchainWalletDialog
+            walletId={walletData.wallet._id}
+            onWalletAdded={refreshWalletData}
+          />
         </div>
 
         {/* Manual Tokens Section */}
