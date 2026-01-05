@@ -10,10 +10,10 @@ export interface GetMarketData {
   id: string;
   symbol: string;
   name: string;
-  current_price: number;
-  market_cap: number;
-  total_volume: number;
-  market_cap_rank: number;
+  current_price: number | null;
+  market_cap: number | null;
+  total_volume: number | null;
+  market_cap_rank: number | null;
   image: string;
-  price_change_percentage_24h: number;
+  price_change_percentage_24h: number | null;
 }

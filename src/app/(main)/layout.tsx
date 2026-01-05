@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import { ModeToggle } from "@/components/themeButton";
 import {
   SidebarInset,
   SidebarProvider,
@@ -13,8 +14,11 @@ export default function MainLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <SidebarTrigger />
+      <SidebarInset className="min-h-screen p-6 pt-2">
+        <div className="flex justify-between">
+          <SidebarTrigger />
+          <ModeToggle />
+        </div>
         <main>{children}</main>
       </SidebarInset>
     </SidebarProvider>

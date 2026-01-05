@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,10 +13,15 @@ import {
 } from "@/components/ui/table";
 import { GetMarketData } from "@/constants/types/api/gecko/getMarketTypes";
 import { getBaseUrl } from "@/env";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { SkeletonTable } from "./skeleton-table";
 
-async function getMarket() {
-  const response = await fetch(`${getBaseUrl()}/api/coingecko/market`);
+async function getMarket(page: number, per_page: number) {
+  const response = await fetch(
+    `${getBaseUrl()}/api/coingecko/market?page=${page}&per_page=${per_page}`
+  );
   if (!response.ok) {
     throw new Error(
       "Failed to fetch wallet data with url: " +
@@ -25,20 +31,40 @@ async function getMarket() {
   return response.json() as Promise<GetMarketData[]>;
 }
 
+const tableColumns = [
+  "#",
+  "Coin",
+  "Price",
+  "24h %",
+  "Market Cap",
+  "Volume (24h)",
+];
+
 export default function TableMarket() {
   const [marketData, setMarketData] = useState<GetMarketData[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const totalPages = 25;
+  const router = useRouter();
 
   useEffect(() => {
-    getMarket()
+    setIsLoading(true);
+    getMarket(page, 10)
       .then((data) => {
         setMarketData(data);
       })
       .catch((error) => {
         console.error("Error fetching market data:", error);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-  }, []);
+  }, [page]);
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | null) => {
+    if (price === null) {
+      return "N/A";
+    }
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
@@ -47,7 +73,10 @@ export default function TableMarket() {
     }).format(price);
   };
 
-  const formatMarketCap = (marketCap: number) => {
+  const formatMarketCap = (marketCap: number | null) => {
+    if (marketCap === null) {
+      return "N/A";
+    }
     if (marketCap >= 1e12) {
       return `$${(marketCap / 1e12).toFixed(2)}T`;
     } else if (marketCap >= 1e9) {
@@ -59,7 +88,10 @@ export default function TableMarket() {
     }
   };
 
-  const formatPercentage = (percentage: number) => {
+  const formatPercentage = (percentage: number | null) => {
+    if (percentage === null) {
+      return "N/A";
+    }
     const isPositive = percentage >= 0;
     return (
       <Badge
@@ -71,6 +103,9 @@ export default function TableMarket() {
       </Badge>
     );
   };
+  if (isLoading) {
+    return <SkeletonTable columns={tableColumns} />;
+  }
 
   if (!marketData || marketData.length === 0) {
     return (
@@ -88,18 +123,23 @@ export default function TableMarket() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">#</TableHead>
-              <TableHead>Coin</TableHead>
-              <TableHead className="text-right">Price</TableHead>
-              <TableHead className="text-right">24h %</TableHead>
-              {/* <TableHead className="text-right">7d %</TableHead> */}
-              <TableHead className="text-right">Market Cap</TableHead>
-              <TableHead className="text-right">Volume (24h)</TableHead>
+              {tableColumns.map((column) => (
+                <TableHead
+                  key={column}
+                  className={column === "#" ? "w-12.5" : "text-right"}
+                >
+                  {column}
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
             {marketData.map((coin) => (
-              <TableRow key={coin.id} className="hover:bg-muted/50">
+              <TableRow
+                key={coin.id}
+                className="hover:bg-muted/50 cursor-pointer"
+                onClick={() => router.push(`/coins/${coin.id}`)}
+              >
                 <TableCell className="font-medium">
                   {coin.market_cap_rank}
                 </TableCell>
@@ -125,11 +165,6 @@ export default function TableMarket() {
                 <TableCell className="text-right">
                   {formatPercentage(coin.price_change_percentage_24h)}
                 </TableCell>
-                {/* <TableCell className="text-right">
-                  {formatPercentage(
-                    coin.price_change_percentage_7d_in_currency
-                  )}
-                </TableCell> */}
                 <TableCell className="text-right">
                   {formatMarketCap(coin.market_cap)}
                 </TableCell>
@@ -140,6 +175,29 @@ export default function TableMarket() {
             ))}
           </TableBody>
         </Table>
+      </div>
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page === 1 || isLoading}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Previous
+        </Button>
+        <div className="text-sm font-medium">
+          Page {page} of {totalPages}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          disabled={page === totalPages || isLoading}
+        >
+          Next
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

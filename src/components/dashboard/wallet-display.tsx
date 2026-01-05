@@ -361,33 +361,36 @@ export function WalletDisplay({
           {walletData.wallet.blockchainWalletId.map((wallet) => (
             <Card key={wallet._id}>
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="font-mono text-base">
-                      {wallet.address}
-                    </CardTitle>
-                    <CardDescription>
-                      Added on {new Date(wallet.createdAt).toLocaleDateString()}
-                    </CardDescription>
+                <div className="flex flex-row items-center justify-between">
+                  <div>
+                    <div className="space-y-1">
+                      <CardTitle className="font-mono text-base">
+                        {wallet.address}
+                      </CardTitle>
+                      <CardDescription>
+                        Added on{" "}
+                        {new Date(wallet.createdAt).toLocaleDateString()}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {wallet.chains.map((chain) => (
+                        <Badge key={chain} variant="secondary">
+                          {chain}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {wallet.chains.map((chain) => (
-                      <Badge key={chain} variant="secondary">
-                        {chain}
-                      </Badge>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        // Mock sync functionality
-                        console.log("Syncing wallet:", wallet.address);
-                      }}
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Sync
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Mock sync functionality
+                      console.log("Syncing wallet:", wallet.address);
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Sync
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
