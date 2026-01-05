@@ -350,10 +350,6 @@ export function WalletDisplay({
             </div>
           </CardContent>
         </Card>
-        <CreateTransactionDialog
-          walletId={walletData.wallet._id}
-          onTransactionCreated={refreshWalletData}
-        />
 
         {/* Blockchain Wallets Section */}
         <div className="space-y-4">
@@ -432,6 +428,10 @@ export function WalletDisplay({
             </Card>
           </div>
         )}
+        <CreateTransactionDialog
+          walletId={walletData.wallet._id}
+          onTransactionCreated={refreshWalletData}
+        />
       </div>
     </div>
   );
