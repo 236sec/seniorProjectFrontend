@@ -1,3 +1,6 @@
+---
+---
+
 # Service and API Route Generation Guide
 
 This guide provides step-by-step instructions for creating new services and API routes following the project's three-layer architecture pattern.

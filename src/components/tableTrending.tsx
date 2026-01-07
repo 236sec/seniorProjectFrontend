@@ -11,23 +11,24 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { GetTrendingData } from "@/constants/types/api/gecko/getTrendingTypes";
-import { getBaseUrl } from "@/env";
+import { formatPrice } from "@/lib/formatters";
+import { getTrending } from "@/services/gecko/getTrending";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SkeletonTable } from "./skeleton-table";
 
-async function getTrending() {
-  const response = await fetch(`${getBaseUrl()}/api/coingecko/trending`);
-  if (!response.ok) {
-    throw new Error(
-      "Failed to fetch trending data with url: " +
-        `${getBaseUrl()}/api/coingecko/trending`
-    );
-  }
-  return response.json() as Promise<GetTrendingData["coins"]>;
-}
+const TABLE_COLUMNS = ["Coin", "Price", "24h %"];
 
-const tableColumns = ["Coin", "Price", "24h %"];
+function PercentageBadge({ value }: { value: number | null }) {
+  if (value === null) return <span>N/A</span>;
+  const isPositive = value >= 0;
+  return (
+    <Badge variant={isPositive ? "default" : "destructive"} className="text-xs">
+      {isPositive ? "+" : ""}
+      {value.toFixed(2)}%
+    </Badge>
+  );
+}
 
 export default function TableTrending() {
   const [trendingData, setTrendingData] = useState<
@@ -37,66 +38,47 @@ export default function TableTrending() {
   const router = useRouter();
 
   useEffect(() => {
-    setIsLoading(true);
-    getTrending()
-      .then((data) => {
-        setTrendingData(data.slice(0, 5));
-      })
-      .catch((error) => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getTrending();
+        setTrendingData(data.coins.slice(0, 5));
+      } catch (error) {
         console.error("Error fetching trending data:", error);
-      })
-      .finally(() => {
+        setTrendingData([]);
+      } finally {
         setIsLoading(false);
-      });
+      }
+    };
+    fetchData();
   }, []);
 
-  const formatPrice = (price: number | string) => {
-    // The API might return string or number for price in 'data'
-    // Based on types it is number, but let's be safe if it comes as string from some endpoints
+  const safeFormatPrice = (price: number | string) => {
     const numPrice = typeof price === "string" ? parseFloat(price) : price;
-
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
-    }).format(numPrice);
-  };
-
-  const formatPercentage = (percentage: number) => {
-    const isPositive = percentage >= 0;
-    return (
-      <Badge
-        variant={isPositive ? "default" : "destructive"}
-        className="text-xs"
-      >
-        {isPositive ? "+" : ""}
-        {percentage.toFixed(2)}%
-      </Badge>
-    );
+    return formatPrice(numPrice);
   };
 
   if (isLoading) {
-    return <SkeletonTable columns={tableColumns} />;
+    return <SkeletonTable columns={TABLE_COLUMNS} rows={5} />;
   }
 
   if (!trendingData || trendingData.length === 0) {
     return (
-      <div className="w-full p-8 text-center">
+      <div className="w-full p-8 text-center bg-muted/20 rounded-lg">
         <h2 className="text-2xl font-bold mb-4">Trending Coins</h2>
-        <p className="text-gray-500">No trending data available</p>
+        <p className="text-muted-foreground">No trending data available</p>
       </div>
     );
   }
 
   return (
-    <div className="w-fit space-y-4">
-      <h2 className="text-xl font-bold mb-4">Trending Coins</h2>
-      <div className="rounded-md border">
-        <Table className="w-[20%]">
+    <div className="w-full space-y-4">
+      <h2 className="text-2xl font-bold tracked-tight">Trending Coins</h2>
+      <div className="rounded-md border bg-card">
+        <Table>
           <TableHeader>
             <TableRow>
-              {tableColumns.map((column) => (
+              {TABLE_COLUMNS.map((column) => (
                 <TableHead key={column}>{column}</TableHead>
               ))}
             </TableRow>
@@ -105,7 +87,7 @@ export default function TableTrending() {
             {trendingData.map((coin) => (
               <TableRow
                 key={coin.item.id}
-                className="hover:bg-muted/50 cursor-pointer"
+                className="hover:bg-muted/50 cursor-pointer transition-colors"
                 onClick={() => router.push(`/coins/${coin.item.id}`)}
               >
                 <TableCell>
@@ -116,19 +98,23 @@ export default function TableTrending() {
                         {coin.item.symbol.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <div className="font-medium">{coin.item.name}</div>
-                      <div className="text-sm text-muted-foreground">
+                    <div className="flex flex-col">
+                      <span className="font-semibold leading-none text-sm">
+                        {coin.item.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
                         {coin.item.symbol.toUpperCase()}
-                      </div>
+                      </span>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{formatPrice(coin.item.data.price)}</TableCell>
-                <TableCell>
-                  {formatPercentage(
-                    coin.item.data.price_change_percentage_24h?.usd || 0
-                  )}
+                <TableCell className="tabular-nums">
+                  {safeFormatPrice(coin.item.data.price)}
+                </TableCell>
+                <TableCell className="tabular-nums">
+                  <PercentageBadge
+                    value={coin.item.data.price_change_percentage_24h?.usd || 0}
+                  />
                 </TableCell>
               </TableRow>
             ))}

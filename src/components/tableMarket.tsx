@@ -12,26 +12,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { GetMarketData } from "@/constants/types/api/gecko/getMarketTypes";
-import { getBaseUrl } from "@/env";
+import { formatMarketCap, formatPrice } from "@/lib/formatters";
+import { getMarket } from "@/services/gecko/getMarket";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SkeletonTable } from "./skeleton-table";
 
-async function getMarket(page: number, per_page: number) {
-  const response = await fetch(
-    `${getBaseUrl()}/api/coingecko/market?page=${page}&per_page=${per_page}`
-  );
-  if (!response.ok) {
-    throw new Error(
-      "Failed to fetch wallet data with url: " +
-        `${getBaseUrl()}/api/coingecko/market`
-    );
-  }
-  return response.json() as Promise<GetMarketData[]>;
-}
-
-const tableColumns = [
+const TABLE_COLUMNS = [
   "#",
   "Coin",
   "Price",
@@ -40,93 +28,79 @@ const tableColumns = [
   "Volume (24h)",
 ];
 
+const ITEMS_PER_PAGE = 10;
+const TOTAL_PAGES = 25;
+
+function PercentageBadge({ value }: { value: number | null }) {
+  if (value === null) return <span>N/A</span>;
+  const isPositive = value >= 0;
+  return (
+    <Badge variant={isPositive ? "default" : "destructive"} className="text-xs">
+      {isPositive ? "+" : ""}
+      {value.toFixed(2)}%
+    </Badge>
+  );
+}
+
 export default function TableMarket() {
   const [marketData, setMarketData] = useState<GetMarketData[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const totalPages = 25;
   const router = useRouter();
 
   useEffect(() => {
-    setIsLoading(true);
-    getMarket(page, 10)
-      .then((data) => {
-        setMarketData(data);
-      })
-      .catch((error) => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getMarket(
+          {
+            page,
+            per_page: ITEMS_PER_PAGE,
+            vs_currency: "usd",
+          },
+          60 // Cache TTL
+        );
+        setMarketData(data || []);
+      } catch (error) {
         console.error("Error fetching market data:", error);
-      })
-      .finally(() => {
+        setMarketData([]);
+      } finally {
         setIsLoading(false);
-      });
+      }
+    };
+    fetchData();
   }, [page]);
 
-  const formatPrice = (price: number | null) => {
-    if (price === null) {
-      return "N/A";
-    }
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
-    }).format(price);
-  };
-
-  const formatMarketCap = (marketCap: number | null) => {
-    if (marketCap === null) {
-      return "N/A";
-    }
-    if (marketCap >= 1e12) {
-      return `$${(marketCap / 1e12).toFixed(2)}T`;
-    } else if (marketCap >= 1e9) {
-      return `$${(marketCap / 1e9).toFixed(2)}B`;
-    } else if (marketCap >= 1e6) {
-      return `$${(marketCap / 1e6).toFixed(2)}M`;
-    } else {
-      return `$${marketCap.toLocaleString()}`;
-    }
-  };
-
-  const formatPercentage = (percentage: number | null) => {
-    if (percentage === null) {
-      return "N/A";
-    }
-    const isPositive = percentage >= 0;
-    return (
-      <Badge
-        variant={isPositive ? "default" : "destructive"}
-        className="text-xs"
-      >
-        {isPositive ? "+" : ""}
-        {percentage.toFixed(2)}%
-      </Badge>
-    );
-  };
   if (isLoading) {
-    return <SkeletonTable columns={tableColumns} />;
+    return <SkeletonTable columns={TABLE_COLUMNS} />;
   }
 
   if (!marketData || marketData.length === 0) {
     return (
-      <div className="w-full p-8 text-center">
+      <div className="w-full p-8 text-center bg-muted/20 rounded-lg">
         <h2 className="text-2xl font-bold mb-4">Market Overview</h2>
-        <p className="text-gray-500">No market data available</p>
+        <p className="text-muted-foreground">No market data available</p>
       </div>
     );
   }
 
   return (
     <div className="w-full space-y-4">
-      <h2 className="text-2xl font-bold mb-4">Market Overview</h2>
-      <div className="rounded-md border">
+      <h2 className="text-2xl font-bold tracked-tight">Market Overview</h2>
+      <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              {tableColumns.map((column) => (
+              {TABLE_COLUMNS.map((column) => (
                 <TableHead
                   key={column}
-                  className={column === "#" ? "w-12.5" : "text-right"}
+                  className={
+                    column === "#"
+                      ? "w-12 text-center"
+                      : column === "Coin"
+                      ? ""
+                      : "text-right"
+                  }
                 >
                   {column}
                 </TableHead>
@@ -137,10 +111,10 @@ export default function TableMarket() {
             {marketData.map((coin) => (
               <TableRow
                 key={coin.id}
-                className="hover:bg-muted/50 cursor-pointer"
+                className="hover:bg-muted/50 cursor-pointer transition-colors"
                 onClick={() => router.push(`/coins/${coin.id}`)}
               >
-                <TableCell className="font-medium">
+                <TableCell className="font-medium text-center">
                   {coin.market_cap_rank}
                 </TableCell>
                 <TableCell>
@@ -151,24 +125,26 @@ export default function TableMarket() {
                         {coin.symbol.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <div className="font-medium">{coin.name}</div>
-                      <div className="text-sm text-muted-foreground">
+                    <div className="flex flex-col">
+                      <span className="font-semibold leading-none text-sm">
+                        {coin.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
                         {coin.symbol.toUpperCase()}
-                      </div>
+                      </span>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-medium">
+                <TableCell className="text-right font-medium tabular-nums">
                   {formatPrice(coin.current_price)}
                 </TableCell>
-                <TableCell className="text-right">
-                  {formatPercentage(coin.price_change_percentage_24h)}
+                <TableCell className="text-right tabular-nums">
+                  <PercentageBadge value={coin.price_change_percentage_24h} />
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right text-muted-foreground tabular-nums">
                   {formatMarketCap(coin.market_cap)}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right text-muted-foreground tabular-nums">
                   {formatMarketCap(coin.total_volume)}
                 </TableCell>
               </TableRow>
@@ -186,14 +162,14 @@ export default function TableMarket() {
           <ChevronLeft className="h-4 w-4" />
           Previous
         </Button>
-        <div className="text-sm font-medium">
-          Page {page} of {totalPages}
+        <div className="text-sm font-medium w-24 text-center">
+          Page {page} of {TOTAL_PAGES}
         </div>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          disabled={page === totalPages || isLoading}
+          onClick={() => setPage((p) => Math.min(TOTAL_PAGES, p + 1))}
+          disabled={page === TOTAL_PAGES || isLoading}
         >
           Next
           <ChevronRight className="h-4 w-4" />

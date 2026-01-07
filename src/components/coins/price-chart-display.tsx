@@ -1,18 +1,13 @@
 "use client";
 
+import { ChartData } from "@/components/coins/chart";
 import {
+  ChartConfig,
   ChartContainer,
   ChartTooltip,
-  type ChartConfig,
 } from "@/components/ui/chart";
+import { memo, useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-
-interface ChartData {
-  date: number;
-  price: number;
-  market_cap: number;
-  volume: number;
-}
 
 interface TooltipProps {
   active?: boolean;
@@ -37,21 +32,100 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function PriceChartDisplay({ chartData }: PriceChartDisplayProps) {
-  const currencyFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    []
+  );
 
-  const compactFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    notation: "compact",
-    maximumFractionDigits: 1,
-  });
+  const compactFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }),
+    []
+  );
 
-  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
+  if (chartData.length === 0) {
+    return (
+      <div className="flex h-62.5 w-full items-center justify-center text-muted-foreground">
+        No data available
+      </div>
+    );
+  }
+
+  return (
+    <ChartContainer config={chartConfig} className="aspect-auto h-62.5 w-full">
+      <AreaChart data={chartData}>
+        <defs>
+          <linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1">
+            <stop
+              offset="5%"
+              stopColor="var(--color-price)"
+              stopOpacity={0.8}
+            />
+            <stop
+              offset="95%"
+              stopColor="var(--color-price)"
+              stopOpacity={0.1}
+            />
+          </linearGradient>
+        </defs>
+        <CartesianGrid vertical={false} />
+        <XAxis
+          dataKey="date"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          minTickGap={32}
+          tickFormatter={(value) => {
+            const date = new Date(value);
+            return date.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            });
+          }}
+        />
+        <ChartTooltip
+          cursor={false}
+          content={
+            <CustomTooltip
+              currencyFormatter={currencyFormatter}
+              compactFormatter={compactFormatter}
+            />
+          }
+        />
+        <Area
+          dataKey="price"
+          type="natural"
+          fill="url(#fillPrice)"
+          stroke="var(--color-price)"
+          stackId="a"
+        />
+      </AreaChart>
+    </ChartContainer>
+  );
+}
+
+const CustomTooltip = memo(
+  ({
+    active,
+    payload,
+    label,
+    currencyFormatter,
+    compactFormatter,
+  }: TooltipProps & {
+    currencyFormatter: Intl.NumberFormat;
+    compactFormatter: Intl.NumberFormat;
+  }) => {
     if (active && payload && payload.length && label) {
       const data = payload[0].payload;
       return (
@@ -95,57 +169,6 @@ export function PriceChartDisplay({ chartData }: PriceChartDisplayProps) {
       );
     }
     return null;
-  };
-
-  if (chartData.length === 0) {
-    return (
-      <div className="flex h-62.5 w-full items-center justify-center text-muted-foreground">
-        No data available
-      </div>
-    );
   }
-
-  return (
-    <ChartContainer config={chartConfig} className="aspect-auto h-62.5 w-full">
-      <AreaChart data={chartData}>
-        <defs>
-          <linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1">
-            <stop
-              offset="5%"
-              stopColor="var(--color-price)"
-              stopOpacity={0.8}
-            />
-            <stop
-              offset="95%"
-              stopColor="var(--color-price)"
-              stopOpacity={0.1}
-            />
-          </linearGradient>
-        </defs>
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey="date"
-          tickLine={false}
-          axisLine={false}
-          tickMargin={8}
-          minTickGap={32}
-          tickFormatter={(value) => {
-            const date = new Date(value);
-            return date.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            });
-          }}
-        />
-        <ChartTooltip cursor={false} content={<CustomTooltip />} />
-        <Area
-          dataKey="price"
-          type="natural"
-          fill="url(#fillPrice)"
-          stroke="var(--color-price)"
-          stackId="a"
-        />
-      </AreaChart>
-    </ChartContainer>
-  );
-}
+);
+CustomTooltip.displayName = "CustomTooltip";
