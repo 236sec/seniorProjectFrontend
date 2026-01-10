@@ -37,6 +37,7 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
     useState<GetWalletTransactionsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [isShowTransactions, setIsShowTransactions] = useState(false);
 
   const fetchTransactions = async (
     walletId: string,
@@ -77,11 +78,13 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
         });
 
       // Fetch transactions separately
+      setIsShowTransactions(true);
       fetchTransactions(selectedWallet);
     }
   };
 
   useEffect(() => {
+    setIsShowTransactions(false);
     refreshWalletData();
   }, [selectedWallet]);
 
@@ -104,15 +107,17 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
             loading={loading}
             refreshWalletData={refreshWalletData}
           />
-          <TransactionHistory
-            transactionsData={transactionsData}
-            loading={transactionsLoading}
-            onPageChange={(limit, offset) => {
-              if (selectedWallet) {
-                fetchTransactions(selectedWallet, limit, offset);
-              }
-            }}
-          />
+          {isShowTransactions && (
+            <TransactionHistory
+              transactionsData={transactionsData}
+              loading={transactionsLoading}
+              onPageChange={(limit, offset) => {
+                if (selectedWallet) {
+                  fetchTransactions(selectedWallet, limit, offset);
+                }
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

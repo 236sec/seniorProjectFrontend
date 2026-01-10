@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AlchemyChain } from "@/constants/enum/AlchemyChain";
 import { GetWalletResponse } from "@/constants/types/api/getWalletTypes";
 import { AddBlockchainWalletDialog } from "./add-blockchain-wallet-dialog";
 import { SyncBlockchainWalletDialog } from "./sync-blockchain-wallet-dialog";
@@ -59,6 +60,7 @@ export function BlockchainWalletList({
               </Button> */}
               <SyncBlockchainWalletDialog
                 blockchainWalletId={blockchainWallet._id}
+                initChains={blockchainWallet.chains as AlchemyChain[]}
               />
             </div>
           </CardHeader>
