@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,8 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { GetWalletResponse } from "@/constants/types/api/getWalletTypes";
-import { RefreshCw } from "lucide-react";
 import { AddBlockchainWalletDialog } from "./add-blockchain-wallet-dialog";
+import { SyncBlockchainWalletDialog } from "./sync-blockchain-wallet-dialog";
 
 interface BlockchainWalletListProps {
   wallets: GetWalletResponse["wallet"]["blockchainWalletId"];
@@ -25,28 +24,29 @@ export function BlockchainWalletList({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Connected Wallets</h3>
-      {wallets.map((wallet) => (
-        <Card key={wallet._id}>
+      {wallets.map((blockchainWallet) => (
+        <Card key={blockchainWallet._id}>
           <CardHeader className="pb-3">
             <div className="flex flex-row items-center justify-between">
               <div>
                 <div className="space-y-1">
                   <CardTitle className="font-mono text-base">
-                    {wallet.address}
+                    {blockchainWallet.address}
                   </CardTitle>
                   <CardDescription>
-                    Added on {new Date(wallet.createdAt).toLocaleDateString()}
+                    Added on{" "}
+                    {new Date(blockchainWallet.createdAt).toLocaleDateString()}
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  {wallet.chains.map((chain) => (
+                  {blockchainWallet.chains.map((chain) => (
                     <Badge key={chain} variant="secondary">
                       {chain}
                     </Badge>
                   ))}
                 </div>
               </div>
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 onClick={() => {
@@ -56,7 +56,10 @@ export function BlockchainWalletList({
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Sync
-              </Button>
+              </Button> */}
+              <SyncBlockchainWalletDialog
+                blockchainWalletId={blockchainWallet._id}
+              />
             </div>
           </CardHeader>
           <CardContent>
