@@ -40,6 +40,7 @@ interface SyncBlockchainWalletDialogProps {
   blockchainWalletId: string;
   initChains?: AlchemyChain[];
   onSync?: (selectedTokens: ScannedToken[]) => void;
+  onChangeSubmitting?: () => void;
 }
 
 interface ScannedToken {
@@ -64,6 +65,7 @@ export function SyncBlockchainWalletDialog({
   walletId,
   initChains = [],
   onSync,
+  onChangeSubmitting,
 }: SyncBlockchainWalletDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -71,6 +73,7 @@ export function SyncBlockchainWalletDialog({
   const [selectedTokenIndices, setSelectedTokenIndices] = useState<number[]>(
     []
   );
+  const [isChangeSubmitting, setIsChangeSubmitting] = useState(false);
   const [uncheckedChains, setUncheckedChains] =
     useState<AlchemyChain[]>(initChains);
   const [address, setAddress] = useState<string>("");
@@ -122,6 +125,9 @@ export function SyncBlockchainWalletDialog({
         };
       });
       const data: CreateBatchTransactionsParams = { walletId, items: newItems };
+      if (data.items.length !== 0) {
+        setIsChangeSubmitting(true);
+      }
       const response = await fetch(`${getBaseUrl()}/api/transactions/batch`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -141,7 +147,10 @@ export function SyncBlockchainWalletDialog({
     setLoading(true);
     try {
       // First, update the blockchain wallet with selected chains
-      await updateBlockchainWalletChains();
+      if (selectedChains.length !== uncheckedChains.length) {
+        setIsChangeSubmitting(true);
+        await updateBlockchainWalletChains();
+      }
 
       // Then fetch the differences
       const response = await fetch(
@@ -218,14 +227,27 @@ export function SyncBlockchainWalletDialog({
   };
 
   const handleConfirmSync = async () => {
-    const tokensToSync = selectedTokenIndices.map((i) => scannedTokens[i]);
-    console.log("Syncing tokens:", tokensToSync);
-    await updateTokenBalanceBlockchainWallet();
+    setLoading(true);
+    try {
+      const tokensToSync = selectedTokenIndices.map((i) => scannedTokens[i]);
+      await updateTokenBalanceBlockchainWallet();
 
-    if (onSync) {
-      onSync(tokensToSync);
+      if (onSync) {
+        onSync(tokensToSync);
+      }
+
+      if (onChangeSubmitting) {
+        onChangeSubmitting();
+      }
+
+      setOpen(false);
+      // We manually calling open change logic here since setOpen(false) won't trigger onOpenChange
+      resetDialog();
+    } catch (error) {
+      console.error("Error syncing wallet:", error);
+    } finally {
+      setLoading(false);
     }
-    setOpen(false);
   };
 
   const resetDialog = () => {
@@ -235,6 +257,7 @@ export function SyncBlockchainWalletDialog({
     // setSelectedChains([]);
     // setUncheckedChains([]);
     setChainSelectorOpen(true);
+    setIsChangeSubmitting(false);
   };
 
   return (
@@ -243,6 +266,8 @@ export function SyncBlockchainWalletDialog({
       onOpenChange={(val) => {
         setOpen(val);
         if (!val) {
+          console.log("isChangeSubmitting", isChangeSubmitting);
+          if (isChangeSubmitting && onChangeSubmitting) onChangeSubmitting();
           resetDialog();
         }
       }}

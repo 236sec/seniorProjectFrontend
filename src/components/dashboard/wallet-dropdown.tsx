@@ -19,21 +19,21 @@ import { Input } from "@/components/ui/input";
 import type { GetUserResponse } from "@/constants/types/api/getUserTypes";
 import { getBaseUrl } from "@/env";
 import { ChevronDown, Plus, Wallet } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface WalletDropdownProps {
   walletData: GetUserResponse["wallets"];
   selectedWallet: string | null;
-  setSelectedWallet: React.Dispatch<React.SetStateAction<string | null>>;
   onWalletCreated?: () => void;
 }
 
 export function WalletDropdown({
   walletData,
   selectedWallet,
-  setSelectedWallet,
   onWalletCreated,
 }: WalletDropdownProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -78,7 +78,8 @@ export function WalletDropdown({
       }
 
       // Then update local state
-      setSelectedWallet(data._id);
+      // setSelectedWallet(data._id);
+      router.push(`/dashboard/${data._id}`);
       setOpen(false);
       setName("");
       setDescription("");
@@ -171,7 +172,7 @@ export function WalletDropdown({
             {walletData.map((wallet) => (
               <DropdownMenuItem
                 key={wallet._id}
-                onClick={() => setSelectedWallet(wallet._id)}
+                onClick={() => router.push(`/dashboard/${wallet._id}`)}
                 className="flex flex-col items-start py-3 cursor-pointer"
               >
                 <span className="font-medium">{wallet.name}</span>

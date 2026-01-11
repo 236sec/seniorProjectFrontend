@@ -54,21 +54,11 @@ export function BlockchainWalletList({
                   ))}
                 </div>
               </div>
-              {/* <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // Mock sync functionality
-                  console.log("Syncing wallet:", wallet.address);
-                }}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Sync
-              </Button> */}
               <SyncBlockchainWalletDialog
                 blockchainWalletId={blockchainWallet._id}
                 walletId={walletId}
                 initChains={blockchainWallet.chains as AlchemyChain[]}
+                onChangeSubmitting={refreshWalletData}
               />
             </div>
           </CardHeader>

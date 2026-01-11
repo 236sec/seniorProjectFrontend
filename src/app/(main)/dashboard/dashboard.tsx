@@ -10,6 +10,7 @@ import { use, useEffect, useState } from "react";
 
 interface DashboardProps {
   userDataPromised: Promise<GetUserResponse | undefined>;
+  walletId?: string;
 }
 
 async function fetchWalletData(id: string): Promise<GetWalletResponse> {
@@ -25,13 +26,9 @@ async function fetchWalletData(id: string): Promise<GetWalletResponse> {
   return await response.json();
 }
 
-export function Dashboard({ userDataPromised }: DashboardProps) {
+export function Dashboard({ userDataPromised, walletId }: DashboardProps) {
   const userData = use(userDataPromised)!;
-  const [selectedWallet, setSelectedWallet] = useState<string | null>(
-    userData?.wallets?.length && userData.wallets.length > 0
-      ? userData.wallets[0]._id
-      : null
-  );
+  const selectedWallet = walletId || null;
   const [walletData, setWalletData] = useState<GetWalletResponse | null>(null);
   const [transactionsData, setTransactionsData] =
     useState<GetWalletTransactionsResponse | null>(null);
@@ -97,7 +94,6 @@ export function Dashboard({ userDataPromised }: DashboardProps) {
               <WalletDropdown
                 walletData={userData?.wallets}
                 selectedWallet={selectedWallet}
-                setSelectedWallet={setSelectedWallet}
               />
             </div>
           </div>

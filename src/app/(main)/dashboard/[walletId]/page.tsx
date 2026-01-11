@@ -2,21 +2,25 @@ import { auth } from "@/auth";
 import { getUser } from "@/services/getUser";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { Dashboard } from "./dashboard";
+import { Dashboard } from "../dashboard";
 
 async function getData(id: string) {
   return getUser({ id });
 }
 
-export default async function Page() {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ walletId: string }>;
+}) {
+  const { walletId } = await params;
   const session = await auth();
-  const userData = await getData(session!.user._id);
 
-  if (userData?.wallets && userData.wallets.length > 0) {
-    redirect(`/dashboard/${userData.wallets[0]._id}`);
+  if (!session?.user?._id) {
+    redirect("/api/auth/signin");
   }
 
-  const userDataPromised = Promise.resolve(userData);
+  const userDataPromised = getData(session.user._id);
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -26,7 +30,7 @@ export default async function Page() {
       </div>
 
       <Suspense fallback={<div>Loading dashboard...</div>}>
-        <Dashboard userDataPromised={userDataPromised} />
+        <Dashboard userDataPromised={userDataPromised} walletId={walletId} />
       </Suspense>
     </div>
   );
