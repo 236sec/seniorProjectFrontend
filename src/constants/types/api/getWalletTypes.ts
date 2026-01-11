@@ -13,11 +13,24 @@ export interface TokenDetails {
   priceChange24h: number | null;
 }
 
+export interface WalletToken {
+  tokenContractId: {
+    _id: string;
+    chainId: string;
+    contractAddress: string;
+    coinGeckoId: string;
+    name: string;
+    symbol: string;
+    tokenId: string; // The ID used in the tokens map
+  };
+  balance: string; // Hex string
+}
+
 export interface BlockchainWallet {
   _id: string;
   address: string;
   chains: string[];
-  tokens: never[]; // Empty array in the new API
+  tokens: WalletToken[];
   createdAt: string;
   updatedAt: string;
 }

@@ -80,6 +80,7 @@ export function WalletDisplay({
         <BlockchainWalletList
           wallets={walletData.wallet.blockchainWalletId}
           walletId={walletData.wallet._id}
+          tokensMap={walletData.tokens}
           refreshWalletData={refreshWalletData}
         />
 

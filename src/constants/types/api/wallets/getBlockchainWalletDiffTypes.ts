@@ -13,6 +13,7 @@ export interface TokenMetadata {
 }
 
 export interface TokenDifference {
+  tokenContractId: string;
   contractAddress: string;
   balance: string; // hex format
   balanceFormatted: string; // formatted value
@@ -24,6 +25,7 @@ export interface TokenDifference {
   decimals: number | null;
   network: string;
   token: TokenMetadata | null;
+  currentPrice: number | null;
 }
 
 export interface GetBlockchainWalletDiffParams {

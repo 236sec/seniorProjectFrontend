@@ -21,6 +21,11 @@ import {
   AVAILABLE_CHAINS,
   CHAIN_DISPLAY_NAMES,
 } from "@/constants/enum/AlchemyChain";
+import { CreateBatchTransactionsParams } from "@/constants/types/api/createBatchTransactionsTypes";
+import {
+  TransactionEventType,
+  TransactionType,
+} from "@/constants/types/api/createTransactionTypes";
 import {
   GetBlockchainWalletDiffResponse,
   TokenMetadata,
@@ -31,6 +36,7 @@ import { Check, ChevronDown, Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 interface SyncBlockchainWalletDialogProps {
+  walletId: string;
   blockchainWalletId: string;
   initChains?: AlchemyChain[];
   onSync?: (selectedTokens: ScannedToken[]) => void;
@@ -41,17 +47,21 @@ interface ScannedToken {
   symbol: string;
   network: string;
   balance: number;
+  balanceHex: string;
   logo: string;
   contractAddress: string;
+  tokenContractId: string;
   oldBalance: number;
   diff: number;
   formattedBalance: string;
   decimals: number | null;
   token: TokenMetadata | null;
+  currentPrice?: number | null;
 }
 
 export function SyncBlockchainWalletDialog({
   blockchainWalletId,
+  walletId,
   initChains = [],
   onSync,
 }: SyncBlockchainWalletDialogProps) {
@@ -82,10 +92,47 @@ export function SyncBlockchainWalletDialog({
 
       if (!response.ok) {
         throw new Error("Failed to update blockchain wallet");
-      } else {
       }
     } catch (error) {
       console.error("Error updating blockchain wallet:", error);
+      throw error;
+    }
+  };
+
+  const updateTokenBalanceBlockchainWallet = async () => {
+    try {
+      const newItems = selectedTokenIndices.map((i) => {
+        const token = scannedTokens[i];
+        const price = token.currentPrice || 0;
+        const event_type =
+          token.diff > 0
+            ? TransactionEventType.DEPOSIT
+            : TransactionEventType.WITHDRAWAL;
+        const cashflow = Math.abs(token.diff) * price;
+
+        return {
+          tokenContractId: token.tokenContractId,
+          type: TransactionType.SYNCED as const,
+          event_type,
+          blockchainWalletId: blockchainWalletId,
+          quantity: token.balanceHex,
+          timestamp: new Date().toISOString(),
+          price_usd: price,
+          cashflow_usd: cashflow,
+        };
+      });
+      const data: CreateBatchTransactionsParams = { walletId, items: newItems };
+      const response = await fetch(`${getBaseUrl()}/api/transactions/batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update token balances");
+      }
+    } catch (error) {
+      console.error("Error updating token balances:", error);
       throw error;
     }
   };
@@ -122,13 +169,16 @@ export function SyncBlockchainWalletDialog({
           symbol: diff.symbol,
           network: diff.network,
           balance: currentBalance,
+          balanceHex: diff.balance,
           contractAddress: diff.contractAddress,
+          tokenContractId: diff.tokenContractId,
           oldBalance: previousBalance,
           diff: difference,
           formattedBalance: diff.balanceFormatted,
           decimals: diff.decimals,
           logo: diff.logo || diff.token?.image?.thumb || "",
           token: diff.token,
+          currentPrice: diff.currentPrice || null,
         };
       });
 
@@ -167,11 +217,11 @@ export function SyncBlockchainWalletDialog({
     );
   };
 
-  const handleConfirmSync = () => {
+  const handleConfirmSync = async () => {
     const tokensToSync = selectedTokenIndices.map((i) => scannedTokens[i]);
     console.log("Syncing tokens:", tokensToSync);
+    await updateTokenBalanceBlockchainWallet();
 
-    // In a real implementation, this would call an API to update the wallet's holdings
     if (onSync) {
       onSync(tokensToSync);
     }
@@ -226,68 +276,6 @@ export function SyncBlockchainWalletDialog({
               </p>
             </div>
           )}
-
-          <Collapsible
-            open={chainSelectorOpen}
-            onOpenChange={setChainSelectorOpen}
-          >
-            <div className="space-y-2">
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex w-full justify-between p-2 hover:bg-muted/50"
-                >
-                  <span className="text-sm font-medium">
-                    Select Chains ({selectedChains.length})
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 transition-transform",
-                      chainSelectorOpen && "rotate-180"
-                    )}
-                  />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  {AVAILABLE_CHAINS.map((chain) => {
-                    const isInitial = initChains.includes(chain);
-                    const isSelected = selectedChains.includes(chain);
-                    return (
-                      <div
-                        key={chain}
-                        className={cn(
-                          "flex items-center justify-between rounded-md border p-3 transition-colors",
-                          isSelected && "border-primary bg-primary/5",
-                          isInitial
-                            ? "opacity-75"
-                            : "cursor-pointer hover:bg-muted/50"
-                        )}
-                        onClick={() => !isInitial && toggleChain(chain)}
-                        title={
-                          isInitial ? "Initial chain - cannot be removed" : ""
-                        }
-                      >
-                        <span className="text-sm font-medium">
-                          {CHAIN_DISPLAY_NAMES[chain]}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          {isInitial && (
-                            <span className="text-[10px] text-muted-foreground">
-                              Synced
-                            </span>
-                          )}
-                          {isSelected && (
-                            <Check className="h-4 w-4 text-primary" />
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CollapsibleContent>
-            </div>
-          </Collapsible>
 
           {scannedTokens.length > 0 && (
             <div className="space-y-4">
@@ -396,6 +384,68 @@ export function SyncBlockchainWalletDialog({
               </div>
             </div>
           )}
+
+          <Collapsible
+            open={chainSelectorOpen}
+            onOpenChange={setChainSelectorOpen}
+          >
+            <div className="space-y-2">
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex w-full justify-between p-2 hover:bg-muted/50"
+                >
+                  <span className="text-sm font-medium">
+                    Select Chains ({selectedChains.length})
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      chainSelectorOpen && "rotate-180"
+                    )}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  {AVAILABLE_CHAINS.map((chain) => {
+                    const isInitial = initChains.includes(chain);
+                    const isSelected = selectedChains.includes(chain);
+                    return (
+                      <div
+                        key={chain}
+                        className={cn(
+                          "flex items-center justify-between rounded-md border p-3 transition-colors",
+                          isSelected && "border-primary bg-primary/5",
+                          isInitial
+                            ? "opacity-75"
+                            : "cursor-pointer hover:bg-muted/50"
+                        )}
+                        onClick={() => !isInitial && toggleChain(chain)}
+                        title={
+                          isInitial ? "Initial chain - cannot be removed" : ""
+                        }
+                      >
+                        <span className="text-sm font-medium">
+                          {CHAIN_DISPLAY_NAMES[chain]}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {isInitial && (
+                            <span className="text-[10px] text-muted-foreground">
+                              Synced
+                            </span>
+                          )}
+                          {isSelected && (
+                            <Check className="h-4 w-4 text-primary" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
         </div>
 
         <DialogFooter>

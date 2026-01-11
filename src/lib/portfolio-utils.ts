@@ -50,54 +50,138 @@ export function formatBalance(balance: string, decimals: number = 18): string {
  * @param walletData - The wallet response data containing tokens and performance
  * @returns Array of aggregated tokens with calculated metrics
  */
+/**
+ * Aggregates tokens from wallet data and calculates PNL for each token
+ * @param walletData - The wallet response data containing tokens and performance
+ * @returns Array of aggregated tokens with calculated metrics
+ */
 export function getAggregatedTokens(
   walletData: GetWalletResponse
 ): AggregatedToken[] {
-  const tokenMap = new Map<string, AggregatedToken>();
+  const tokenMap = new Map<
+    string,
+    {
+      tokenDetails: (typeof walletData.tokens)[string];
+      totalBalance: bigint;
+      totalInvested: number;
+      totalCashflow: number;
+      performance?: PortfolioPerformance; // Keep one ref if needed, but we aggregate values
+    }
+  >();
 
-  // Process manual tokens
-  walletData.wallet.manualTokens.forEach((token) => {
-    const tokenDetails = walletData.tokens[token.tokenId];
+  // Helper to process token balance
+  const addBalance = (tokenId: string, balanceRaw: string) => {
+    const tokenDetails = walletData.tokens[tokenId];
     if (!tokenDetails) return;
 
-    const currentBalance = BigInt(token.balance);
-    const performance = walletData.wallet.portfolioPerformance.find(
-      (p) => p.tokenId === token.tokenId
+    if (!tokenMap.has(tokenDetails.id)) {
+      tokenMap.set(tokenDetails.id, {
+        tokenDetails,
+        totalBalance: BigInt(0),
+        totalInvested: 0,
+        totalCashflow: 0,
+      });
+    }
+
+    const entry = tokenMap.get(tokenDetails.id)!;
+    try {
+      if (balanceRaw) {
+        entry.totalBalance += BigInt(balanceRaw);
+      }
+    } catch (e) {
+      void e;
+      console.error(
+        `Invalid balance for ${tokenDetails.symbol}: ${balanceRaw}`
+      );
+    }
+  };
+
+  // 1. Process Manual Tokens
+  walletData.wallet.manualTokens.forEach((token) => {
+    addBalance(token.tokenId, token.balance);
+  });
+
+  // 2. Process Blockchain Tokens
+  walletData.wallet.blockchainWalletId.forEach((wallet) => {
+    if (wallet.tokens && Array.isArray(wallet.tokens)) {
+      wallet.tokens.forEach((token) => {
+        // Handle both structure types if necessary, but strictly typing based on interface
+        const tokenId = token.tokenContractId?.tokenId;
+        if (tokenId) {
+          addBalance(tokenId, token.balance);
+        }
+      });
+    }
+  });
+
+  // 3. Process Portfolio Performance (Aggregate stats)
+  if (walletData.wallet.portfolioPerformance) {
+    walletData.wallet.portfolioPerformance.forEach((perf) => {
+      const tokenDetails = walletData.tokens[perf.tokenId];
+      if (!tokenDetails) return;
+
+      // Ensure entry exists (even if no current balance, we might have history)
+      if (!tokenMap.has(tokenDetails.id)) {
+        tokenMap.set(tokenDetails.id, {
+          tokenDetails,
+          totalBalance: BigInt(0),
+          totalInvested: 0,
+          totalCashflow: 0,
+        });
+      }
+
+      const entry = tokenMap.get(tokenDetails.id)!;
+      entry.totalInvested += perf.totalInvestedAmount || 0;
+      entry.totalCashflow += perf.totalCashflowUsd || 0;
+
+      // Store one performance object for reference if needed (e.g. for creating AggregatedToken)
+      // Note: This might be partial if we merged multiple tokens,
+      // but UI mainly uses it for "is there performance data?".
+      if (!entry.performance) {
+        entry.performance = perf;
+      }
+    });
+  }
+
+  // 4. Transform to AggregatedToken
+  return Array.from(tokenMap.values()).map((entry) => {
+    const {
+      tokenDetails,
+      totalBalance,
+      totalInvested,
+      totalCashflow,
+      performance,
+    } = entry;
+
+    void totalInvested;
+    // Calculate values
+    // Note: Assuming 18 decimals as per original code.
+    // Ideally this should use token metadata decimals.
+    const balanceNumber = parseFloat(
+      Utils.formatUnits(totalBalance.toString(), 18)
     );
-
-    // Calculate current value and PNL
-    const balanceNumber = parseFloat(Utils.formatUnits(token.balance, 18));
     const currentValue = balanceNumber * tokenDetails.currentPrice;
-    const cashflow = performance?.totalCashflowUsd || 0;
 
-    // PNL = Current Value + Total Cashflow
-    // Cashflow is negative for money invested, positive for money withdrawn
-    // Example: current value $100, cashflow -$80 → PNL = $100 + (-$80) = $20 profit
-    // Example: current value $100, cashflow -$120 → PNL = $100 + (-$120) = -$20 loss
-    const pnlAmount = currentValue + cashflow;
-
-    // Calculate percentage based on the absolute investment (negative cashflow)
-    // Use absolute value of cashflow as the basis for percentage calculation
-    const investmentBasis = Math.abs(cashflow);
+    // PNL Logic
+    const pnlAmount = currentValue + totalCashflow;
+    const investmentBasis = Math.abs(totalCashflow);
     const pnlPercentage =
       investmentBasis > 0 ? (pnlAmount / investmentBasis) * 100 : 0;
 
-    tokenMap.set(tokenDetails.id, {
+    return {
       id: tokenDetails.id,
       name: tokenDetails.name,
       symbol: tokenDetails.symbol,
       image: tokenDetails.image?.small || "",
-      totalBalance: currentBalance,
-      portfolioPerformance: performance,
+      totalBalance: totalBalance,
+      portfolioPerformance: performance, // Pass through for potential existing UI checks
       currentPrice: tokenDetails.currentPrice,
       priceChange24h: tokenDetails.priceChange24h,
       currentValue,
       pnlAmount,
       pnlPercentage,
-    });
+    };
   });
-
-  return Array.from(tokenMap.values());
 }
 
 /**
