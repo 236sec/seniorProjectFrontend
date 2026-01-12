@@ -44,6 +44,11 @@ const data = {
       url: "/coins/bitcoin",
       icon: Settings2,
     },
+    {
+      title: "Indicators",
+      url: "/indicators",
+      icon: Settings2,
+    },
   ],
 };
 
