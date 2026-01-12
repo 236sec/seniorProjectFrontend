@@ -30,7 +30,7 @@ const SAME_SCALE_INDICATORS: IndicatorSameScaleEnum[] = [
   IndicatorSameScaleEnum.HMA,
   IndicatorSameScaleEnum.KALMAN,
   IndicatorSameScaleEnum.EMA20,
-  IndicatorSameScaleEnum.BOLLINGER,
+  // IndicatorSameScaleEnum.BOLLINGER,
 ];
 
 const DIFFERENT_SCALE_INDICATORS: IndicatorDifferentScaleEnum[] = [
