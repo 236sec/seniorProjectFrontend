@@ -7,7 +7,7 @@ import {
   ChartTooltip,
 } from "@/components/ui/chart";
 import { memo, useMemo } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 interface TooltipProps {
   active?: boolean;
@@ -80,6 +80,20 @@ export function PriceChartDisplay({ chartData }: PriceChartDisplayProps) {
           </linearGradient>
         </defs>
         <CartesianGrid vertical={false} />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          tickFormatter={(value) => {
+            if (value >= 1000000) {
+              return `${(value / 1000000).toFixed(1)}M`;
+            }
+            if (value >= 1000) {
+              return `${(value / 1000).toFixed(1)}K`;
+            }
+            return value.toFixed(2);
+          }}
+        />
         <XAxis
           dataKey="date"
           tickLine={false}
