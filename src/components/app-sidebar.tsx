@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Settings2, SquareTerminal } from "lucide-react";
+import { BookOpen, BotIcon, Settings2, SquareTerminal } from "lucide-react";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
@@ -40,14 +40,14 @@ const data = {
       icon: Settings2,
     },
     {
-      title: "Mock Coin Data",
-      url: "/coins/bitcoin",
-      icon: Settings2,
-    },
-    {
       title: "Indicators",
       url: "/indicators",
       icon: Settings2,
+    },
+    {
+      title: "AI",
+      url: "/ai",
+      icon: BotIcon,
     },
   ],
 };
