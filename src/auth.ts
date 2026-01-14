@@ -18,7 +18,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           return false;
         }
 
-        console.log("Signing in user:", JSON.stringify(user));
         const data = await loginUser({
           email: user.email,
           provider: account!.provider,
