@@ -18,9 +18,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           return false;
         }
 
+        console.log("Signing in user:", JSON.stringify(user));
         const data = await loginUser({
           email: user.email,
           provider: account!.provider,
+          firstName: user.name ? user.name.split(" ")[0] : "",
+          lastName: user.name ? user.name.split(" ").slice(1).join(" ") : "",
         });
         if (!data) {
           console.error("Failed to login user - no data returned");
