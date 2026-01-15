@@ -50,6 +50,7 @@ export default function ChatbotPage({ userData }: ChatbotPageProps) {
   const [selectedWalletId, setSelectedWalletId] = useState<string>(
     userData?.wallets?.[0]?._id || ""
   );
+  const [userHaveSubmitted, setUserHaveSubmitted] = useState<boolean>(false);
   const [text, setText] = useState<string>("");
   const [model, setModel] = useState<string>(models[0].id);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -85,6 +86,7 @@ export default function ChatbotPage({ userData }: ChatbotPageProps) {
       }
     );
     setText("");
+    setUserHaveSubmitted(true);
   };
   return (
     <div className="h-full w-full flex flex-col">
@@ -139,6 +141,7 @@ export default function ChatbotPage({ userData }: ChatbotPageProps) {
             walletData={userData?.wallets}
             selectedWallet={selectedWalletId}
             setSelectedWallet={setSelectedWalletId}
+            disabled={userHaveSubmitted}
           />
 
           <PromptInputTools>

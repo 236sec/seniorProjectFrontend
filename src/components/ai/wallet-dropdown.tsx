@@ -16,12 +16,14 @@ interface WalletDropdownProps {
   walletData: GetUserResponse["wallets"];
   selectedWallet: string | null;
   setSelectedWallet: (walletId: string) => void;
+  disabled?: boolean;
 }
 
 export function WalletDropdown({
   walletData,
   selectedWallet,
   setSelectedWallet,
+  disabled = false,
 }: WalletDropdownProps) {
   const [open, setOpen] = useState(false);
 
@@ -37,7 +39,11 @@ export function WalletDropdown({
       <Dialog open={open} onOpenChange={setOpen}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-full justify-between">
+            <Button
+              disabled={disabled}
+              variant="outline"
+              className="w-full justify-between"
+            >
               <div className="flex items-center gap-2">
                 <Wallet className="h-4 w-4" />
                 <div className="flex flex-col items-start">
