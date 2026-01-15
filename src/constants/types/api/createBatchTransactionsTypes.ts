@@ -4,9 +4,10 @@ import {
 } from "./createTransactionTypes";
 
 export interface BatchTransactionItem {
-  type: TransactionType.SYNCED;
-  blockchainWalletId: string;
-  tokenContractId: string;
+  type: TransactionType;
+  blockchainWalletId?: string;
+  coingeckoId?: string;
+  tokenContractId?: string;
   event_type: TransactionEventType;
   quantity?: string; // hex string
   from?: string;

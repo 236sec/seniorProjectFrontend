@@ -1,3 +1,4 @@
+import { ErrorService } from "@/constants/types/api/commonErrorTypes";
 import {
   GetWalletParams,
   GetWalletResponse,
@@ -6,7 +7,7 @@ import { env } from "@/env";
 
 export async function getWallet(
   data: GetWalletParams
-): Promise<GetWalletResponse | undefined> {
+): Promise<GetWalletResponse | ErrorService | undefined> {
   try {
     const backendUrl = env.BACKEND_URL;
 
@@ -21,15 +22,31 @@ export async function getWallet(
       const responseData = (await response.json()) as GetWalletResponse;
       return responseData;
     } else {
-      console.error(
-        `Get wallet failed with status: ${response.status} ${response.statusText}`
-      );
-      const errorText = await response.text();
-      console.error(`Error response: ${errorText}`);
-      return undefined;
+      try {
+        const errorResponseData = await response.json();
+        console.error(
+          `Get wallet failed with status: ${response.status} ${response.statusText}`
+        );
+        if (
+          errorResponseData &&
+          typeof errorResponseData === "object" &&
+          "response" in errorResponseData &&
+          errorResponseData.response?.message
+        ) {
+          console.error(`Error message: ${errorResponseData.response.message}`);
+          return { error: errorResponseData.response.message };
+        } else {
+          console.error("Error details:", errorResponseData);
+        }
+      } catch {
+        console.error(
+          `Get wallet failed with status: ${response.status} ${response.statusText}`
+        );
+      }
+      return { error: "Unknown error occurred" };
     }
   } catch (error) {
-    console.error("Get user fetch failed:", error);
-    return undefined;
+    console.error("Get wallet fetch failed:", error);
+    return { error: "Fetch failed" };
   }
 }

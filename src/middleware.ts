@@ -29,8 +29,9 @@ export default auth((req) => {
   }
 
   const isProtectedRoute = nextUrl.pathname.startsWith("/dashboard");
+  const isAIRoute = nextUrl.pathname.startsWith("/ai");
 
-  if (isProtectedRoute && !isLoggedIn) {
+  if ((isProtectedRoute || isAIRoute) && !isLoggedIn) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 

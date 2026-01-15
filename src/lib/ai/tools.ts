@@ -1,17 +1,20 @@
-import {
-  TransactionEventType,
-  TransactionType,
-} from "@/constants/types/api/createTransactionTypes";
 // import { addBlockchainWallet } from "@/services/addBlockchainWallet";
 import { getAddressBalances } from "@/services/alchemy/getBalances";
+import { createBatchTransactions } from "@/services/createBatchTransactions";
 // import { createTransaction } from "@/services/createTransaction";
+import { BatchTransactionItem } from "@/constants/types/api/createBatchTransactionsTypes";
+import { TransactionType } from "@/constants/types/api/createTransactionTypes";
 import { getCoin } from "@/services/gecko/getCoin";
 import { getHistoricalChart } from "@/services/gecko/getHistoricalChart";
+import { getSimplePrice } from "@/services/gecko/getSimplePrice";
 import { getWallet } from "@/services/getWallet";
 import { getWalletTransactions } from "@/services/getWalletTransactions";
 import { getBlockchainWalletDiff } from "@/services/wallets/getBlockchainWalletDiff";
 import { tool, ToolSet } from "ai";
+import { Utils } from "alchemy-sdk";
 import { z } from "zod";
+import { getCurrentTimestamp, isErrorService } from "../utils";
+import { add_manual_transaction_input_schema } from "./tool-schema";
 
 const getWeatherInformation = tool({
   description: "show the weather in a given city to the user",
@@ -24,7 +27,7 @@ const getLocalTime = tool({
   description: "get the local time for a specified location",
   inputSchema: z.object({ location: z.string() }),
   outputSchema: z.string(),
-  // including execute function -> no confirmation required
+  needsApproval: true,
   execute: async ({ location }) => {
     console.log(`Getting local time for ${location}`);
     return "10am";
@@ -106,39 +109,84 @@ const addBlockchainWalletToApp = tool({
       .array(z.string())
       .describe("List of chains to track for this wallet"),
   }),
+  needsApproval: true,
   // execute: async (params) => {
   //   const result = await addBlockchainWallet(params);
   //   return JSON.stringify(result);
   // },
 });
 
-const addManualTransaction = tool({
-  description: "Add a manual transaction to the application wallet",
-  inputSchema: z.object({
-    walletId: z.string().describe("The application wallet ID"),
-    type: z
-      .nativeEnum(TransactionType)
-      .describe("Transaction type (MANUAL or SYNCED)"),
-    event_type: z
-      .nativeEnum(TransactionEventType)
-      .optional()
-      .describe("Event type (DEPOSIT, WITHDRAWAL, SWAP)"),
-    tokenId: z.string().optional().describe("The token ID in the database"),
-    quantity: z.string().optional().describe("Amount of tokens involved"),
-    price_usd: z
-      .number()
-      .optional()
-      .describe("Price in USD at time of transaction"),
-    timestamp: z
-      .string()
-      .optional()
-      .describe("Date of transaction ISO string")
-      .transform((str) => (str ? new Date(str) : undefined)),
-  }),
-  // execute: async (params) => {
-  //   const result = await createTransaction(params);
-  //   return JSON.stringify(result);
-  // },
+const addManualTransactions = tool({
+  needsApproval: true,
+  description: "Add manual transactions to the application wallet",
+  inputSchema: add_manual_transaction_input_schema,
+  execute: async (params) => {
+    const coingeckoIdsToFetch: string[] = [];
+    for (const item of params.items) {
+      if (item.price_usd === 0 || item.price_usd === undefined) {
+        coingeckoIdsToFetch.push(item.coingeckoId);
+      }
+    }
+    const prices = await getSimplePrice(
+      {
+        ids: coingeckoIdsToFetch,
+        vs_currencies: ["usd"],
+        names: [],
+        symbols: [],
+        include_tokens: "top",
+        include_market_cap: true,
+        include_24hr_vol: true,
+        include_24hr_change: true,
+        include_last_updated_at: true,
+        precision: "18",
+      },
+      300
+    );
+    const newItems: BatchTransactionItem[] = params.items.map((item) => {
+      const current_price = prices ? prices[item.coingeckoId]?.usd || 0 : 0;
+      const hexQuantity = Utils.parseUnits(
+        item.quantity.toString(),
+        18
+      ).toHexString();
+      const qty = parseFloat(item.quantity.toString());
+      const timestamp = getCurrentTimestamp();
+
+      if (item.price_usd !== 0 && item.price_usd !== undefined) {
+        const price = parseFloat(item.price_usd.toString());
+        const total = qty * price;
+        const cashflow_usd = parseFloat(total.toPrecision(18));
+
+        return {
+          ...item,
+          type: TransactionType.MANUAL,
+          quantity: hexQuantity,
+          cashflow_usd,
+          timestamp,
+        };
+      }
+
+      const total = qty * current_price;
+      const cashflow_usd = parseFloat(total.toPrecision(18));
+
+      return {
+        ...item,
+        type: TransactionType.MANUAL,
+        price_usd: current_price,
+        quantity: hexQuantity,
+        cashflow_usd,
+        timestamp,
+      };
+    });
+    const result = await createBatchTransactions({
+      walletId: params.walletId,
+      items: newItems,
+    });
+    if (!result || isErrorService(result)) {
+      return JSON.stringify({ error: "Failed to add transactions" });
+    } else {
+      return JSON.stringify({ success: true });
+    }
+  },
 });
 
 const getApplicationWalletInfo = tool({
@@ -149,7 +197,55 @@ const getApplicationWalletInfo = tool({
   }),
   execute: async (params) => {
     const result = await getWallet(params);
-    return JSON.stringify(result);
+    if (!result || isErrorService(result)) {
+      return JSON.stringify({ error: "Wallet not found" });
+    }
+
+    // Normalize wallet data for AI consumption
+    const normalizedResult = {
+      walletId: result.wallet._id,
+      name: result.wallet.name,
+      description: result.wallet.description,
+      blockchainAddresses: result.wallet.blockchainWalletId.map((bw) => ({
+        address: bw.address,
+        chains: bw.chains,
+        tokenCount: bw.tokens.length,
+      })),
+      tokens: Object.entries(result.tokens).map(([tokenId, details]) => {
+        // Find balance from blockchain wallets
+        const tokenBalance = result.wallet.blockchainWalletId
+          .flatMap((bw) => bw.tokens)
+          .find((t) => t.tokenContractId.tokenId === tokenId);
+
+        // Find portfolio performance
+        const performance = result.wallet.portfolioPerformance.find(
+          (p) => p.tokenId === tokenId
+        );
+
+        return {
+          id: details.id,
+          name: details.name,
+          symbol: details.symbol,
+          currentPrice: details.currentPrice,
+          priceChange24h: details.priceChange24h,
+          balance: tokenBalance?.balance || "0x0",
+          totalInvestedAmount: performance?.totalInvestedAmount || 0,
+          totalCashflowUsd: performance?.totalCashflowUsd || 0,
+        };
+      }),
+      portfolioSummary: {
+        totalTokens: Object.keys(result.tokens).length,
+        totalInvested: result.wallet.portfolioPerformance.reduce(
+          (sum, p) => sum + p.totalInvestedAmount,
+          0
+        ),
+        totalCashflow: result.wallet.portfolioPerformance.reduce(
+          (sum, p) => sum + p.totalCashflowUsd,
+          0
+        ),
+      },
+    };
+    return JSON.stringify(normalizedResult);
   },
 });
 
@@ -162,6 +258,9 @@ const getApplicationWalletTransactions = tool({
   }),
   execute: async (params) => {
     const result = await getWalletTransactions(params);
+    if (!result || isErrorService(result)) {
+      return JSON.stringify({ error: "Transactions not found" });
+    }
     return JSON.stringify(result);
   },
 });
@@ -174,7 +273,7 @@ export const tools = {
   getTokenHistoricalChart,
   getBlockchainTokenDiff,
   addBlockchainWalletToApp,
-  addManualTransaction,
+  addManualTransactions,
   getApplicationWalletInfo,
   getApplicationWalletTransactions,
 } satisfies ToolSet;

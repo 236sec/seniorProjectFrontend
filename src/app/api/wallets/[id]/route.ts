@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { isErrorService } from "@/lib/utils";
 import { getWallet } from "@/services/getWallet";
 
 async function fetchData(walletId: string) {
@@ -21,7 +22,7 @@ export async function GET(
     const walletId = (await params).id;
     const walletData = await fetchData(walletId);
 
-    if (!walletData) {
+    if (!walletData || isErrorService(walletData)) {
       return Response.json({ error: "Wallet data not found" }, { status: 404 });
     }
 
