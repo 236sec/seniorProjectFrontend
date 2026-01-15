@@ -16,24 +16,6 @@ import { z } from "zod";
 import { getCurrentTimestamp, isErrorService } from "../utils";
 import { add_manual_transaction_input_schema } from "./tool-schema";
 
-const getWeatherInformation = tool({
-  description: "show the weather in a given city to the user",
-  inputSchema: z.object({ city: z.string() }),
-  outputSchema: z.string(), // must define outputSchema
-  // no execute function, we want human in the loop
-});
-
-const getLocalTime = tool({
-  description: "get the local time for a specified location",
-  inputSchema: z.object({ location: z.string() }),
-  outputSchema: z.string(),
-  needsApproval: true,
-  execute: async ({ location }) => {
-    console.log(`Getting local time for ${location}`);
-    return "10am";
-  },
-});
-
 const getBlockchainWalletBalance = tool({
   description:
     "Get blockchain wallet token balance for any address across multiple chains",
@@ -210,6 +192,11 @@ const getApplicationWalletInfo = tool({
         address: bw.address,
         chains: bw.chains,
         tokenCount: bw.tokens.length,
+        tokens: bw.tokens.map((t) => ({
+          nameToken:
+            result.tokens[t.tokenContractId.tokenId]?.name || "Unknown",
+          balance: t.balance,
+        })),
       })),
       tokens: Object.entries(result.tokens).map(([tokenId, details]) => {
         // Find balance from blockchain wallets
@@ -266,8 +253,6 @@ const getApplicationWalletTransactions = tool({
 });
 
 export const tools = {
-  getWeatherInformation,
-  getLocalTime,
   getBlockchainWalletBalance,
   getCoinDetails,
   getTokenHistoricalChart,
