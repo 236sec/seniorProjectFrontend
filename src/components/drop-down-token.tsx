@@ -42,18 +42,21 @@ export function DropDownToken({
   );
   const [page, setPage] = React.useState(1);
   const [hasMore, setHasMore] = React.useState(true);
-  const listRef = React.useRef<HTMLDivElement>(null);
 
-  // Debounced search effect
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setPage(1);
-      setTokens([]);
-      fetchTokens(search, 1);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [search]);
+  const observer = React.useRef<IntersectionObserver | null>(null);
+  const lastTokenRef = React.useCallback(
+    (node: HTMLDivElement) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prev) => prev + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
 
   const fetchTokens = async (searchQuery: string, pageNum: number) => {
     setLoading(true);
@@ -99,17 +102,23 @@ export function DropDownToken({
     }
   };
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLDivElement;
-    const bottom =
-      target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
+  // Debounced search effect
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      setTokens([]);
+      fetchTokens(search, 1);
+    }, 300);
 
-    if (bottom && hasMore && !loading) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchTokens(search, nextPage);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Pagination effect
+  React.useEffect(() => {
+    if (page > 1) {
+      fetchTokens(search, page);
     }
-  };
+  }, [page]);
 
   const handleSelect = (currentValue: string) => {
     const newValue = currentValue === value ? "" : currentValue;
@@ -131,7 +140,7 @@ export function DropDownToken({
           className={cn("w-[250px] justify-between", className)}
         >
           {selectedToken ? (
-            <div className="flex items-center gap-2 overflow-hidden w-full">
+            <div className="flex items-center gap-2 w-full">
               {selectedToken.image?.thumb ? (
                 <Image
                   src={selectedToken.image.thumb}
@@ -165,11 +174,8 @@ export function DropDownToken({
             value={search}
             onValueChange={setSearch}
           />
-          <CommandList
-            ref={listRef}
-            onScroll={handleScroll}
-            className="max-h-[300px]"
-          >
+
+          <CommandList className="max-h-[300px] overflow-y-auto">
             {loading && page === 1 ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
                 Loading...
@@ -178,11 +184,14 @@ export function DropDownToken({
               <>
                 <CommandEmpty>No token found.</CommandEmpty>
                 <CommandGroup>
-                  {tokens.map((token) => (
+                  {tokens.map((token, index) => (
                     <CommandItem
                       key={token.id}
                       value={token.id}
                       onSelect={handleSelect}
+                      ref={
+                        index === tokens.length - 1 ? lastTokenRef : undefined
+                      }
                     >
                       <Check
                         className={cn(
@@ -190,7 +199,7 @@ export function DropDownToken({
                           value === token.id ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      <div className="flex items-center gap-2 flex-1 overflow-hidden">
+                      <div className="flex items-center gap-2 flex-1">
                         {token.image?.thumb ? (
                           <Image
                             src={token.image.thumb}
@@ -204,7 +213,7 @@ export function DropDownToken({
                             <Coins className="h-3 w-3 text-muted-foreground" />
                           </div>
                         )}
-                        <div className="flex flex-col overflow-hidden w-full">
+                        <div className="flex flex-col w-full">
                           <span className="truncate font-medium block">
                             {token.name}
                           </span>
