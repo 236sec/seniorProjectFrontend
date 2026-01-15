@@ -37,23 +37,21 @@ export function BlockchainWalletList({
   refreshWalletData,
 }: BlockchainWalletListProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full overflow-hidden">
       <h3 className="text-lg font-semibold">Connected Wallets</h3>
       {wallets.map((blockchainWallet) => (
         <Card key={blockchainWallet._id}>
           <CardHeader className="pb-3">
-            <div className="flex flex-row items-center justify-between">
-              <div>
-                <div className="space-y-1">
-                  <CardTitle className="font-mono text-base">
-                    {blockchainWallet.address}
-                  </CardTitle>
-                  <CardDescription>
-                    Added on{" "}
-                    {new Date(blockchainWallet.createdAt).toLocaleDateString()}
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
+            <div className="flex flex-row items-start justify-between w-full gap-4">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="font-mono text-base truncate">
+                  {blockchainWallet.address}
+                </CardTitle>
+                <CardDescription>
+                  Added on{" "}
+                  {new Date(blockchainWallet.createdAt).toLocaleDateString()}
+                </CardDescription>
+                <div className="flex items-center gap-2 flex-wrap mt-2">
                   {blockchainWallet.chains.map((chain) => (
                     <Badge key={chain} variant="secondary">
                       {chain}
@@ -61,12 +59,14 @@ export function BlockchainWalletList({
                   ))}
                 </div>
               </div>
-              <SyncBlockchainWalletDialog
-                blockchainWalletId={blockchainWallet._id}
-                walletId={walletId}
-                initChains={blockchainWallet.chains as AlchemyChain[]}
-                onChangeSubmitting={refreshWalletData}
-              />
+              <div className="flex-shrink-0">
+                <SyncBlockchainWalletDialog
+                  blockchainWalletId={blockchainWallet._id}
+                  walletId={walletId}
+                  initChains={blockchainWallet.chains as AlchemyChain[]}
+                  onChangeSubmitting={refreshWalletData}
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
