@@ -112,7 +112,9 @@ export function TransactionHistory({
                       </TableCell>
                       <TableCell>{tx.type}</TableCell>
                       <TableCell>{tx.event_type}</TableCell>
-                      <TableCell>{formatQuantity(tx.quantity)}</TableCell>
+                      <TableCell className="font-mono">
+                        {formatQuantity(tx.quantity)}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (

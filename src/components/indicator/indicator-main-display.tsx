@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Spinner } from "../ui/spinner";
 import { DataPoint, IndicatorPriceChart } from "./indicator-price-chart";
 
 interface IndicatorMainDisplayProps {
@@ -54,9 +55,12 @@ export function IndicatorMainDisplay({
     useState<IndicatorType>(IndicatorDifferentScaleEnum.RSI);
   const [differentScaleIndicatorData, setDifferentScaleIndicatorData] =
     useState<SimpleDataPoint[]>([]);
+  const [isSameScaleLoading, setIsSameScaleLoading] = useState(false);
+  const [isDifferentScaleLoading, setIsDifferentScaleLoading] = useState(false);
 
   useEffect(() => {
     const fetchIndicatorData = async () => {
+      setIsSameScaleLoading(true);
       try {
         const response = await getIndicator({
           params: { coinId },
@@ -71,6 +75,8 @@ export function IndicatorMainDisplay({
       } catch (error) {
         console.error("Error fetching indicator data:", error);
         setSameScaleIndicatorData([]);
+      } finally {
+        setIsSameScaleLoading(false);
       }
     };
 
@@ -79,6 +85,7 @@ export function IndicatorMainDisplay({
 
   useEffect(() => {
     const fetchIndicatorData = async () => {
+      setIsDifferentScaleLoading(true);
       try {
         const response = await getIndicator({
           params: { coinId },
@@ -94,6 +101,8 @@ export function IndicatorMainDisplay({
       } catch (error) {
         console.error("Error fetching indicator data:", error);
         setDifferentScaleIndicatorData([]);
+      } finally {
+        setIsDifferentScaleLoading(false);
       }
     };
 
@@ -102,23 +111,26 @@ export function IndicatorMainDisplay({
 
   return (
     <div className="space-y-4">
-      <Select
-        value={selectedSameScaleIndicator}
-        onValueChange={(value) =>
-          setSelectedSameScaleIndicator(value as SimpleIndicatorType)
-        }
-      >
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Select Indicator" />
-        </SelectTrigger>
-        <SelectContent>
-          {SAME_SCALE_INDICATORS.map((indicator) => (
-            <SelectItem key={indicator} value={indicator}>
-              {indicator.toUpperCase()}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex items-center gap-2">
+        <Select
+          value={selectedSameScaleIndicator}
+          onValueChange={(value) =>
+            setSelectedSameScaleIndicator(value as SimpleIndicatorType)
+          }
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Select Indicator" />
+          </SelectTrigger>
+          <SelectContent>
+            {SAME_SCALE_INDICATORS.map((indicator) => (
+              <SelectItem key={indicator} value={indicator}>
+                {indicator.toUpperCase()}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {isSameScaleLoading && <Spinner />}
+      </div>
 
       <IndicatorPriceChart
         title={`Price vs ${selectedSameScaleIndicator.toUpperCase()}`}
@@ -128,23 +140,26 @@ export function IndicatorMainDisplay({
         line2Label={selectedSameScaleIndicator.toUpperCase()}
       />
 
-      <Select
-        value={selectedDifferentScaleIndicator}
-        onValueChange={(value) =>
-          setSelectedDifferentScaleIndicator(value as SimpleIndicatorType)
-        }
-      >
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Select Indicator" />
-        </SelectTrigger>
-        <SelectContent>
-          {DIFFERENT_SCALE_INDICATORS.map((indicator) => (
-            <SelectItem key={indicator} value={indicator}>
-              {indicator.toUpperCase()}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex items-center gap-2">
+        <Select
+          value={selectedDifferentScaleIndicator}
+          onValueChange={(value) =>
+            setSelectedDifferentScaleIndicator(value as SimpleIndicatorType)
+          }
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Select Indicator" />
+          </SelectTrigger>
+          <SelectContent>
+            {DIFFERENT_SCALE_INDICATORS.map((indicator) => (
+              <SelectItem key={indicator} value={indicator}>
+                {indicator.toUpperCase()}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {isDifferentScaleLoading && <Spinner />}
+      </div>
 
       <IndicatorPriceChart
         title={`${selectedSameScaleIndicator.toUpperCase()} Over Time`}

@@ -201,6 +201,7 @@ export function CreateTransactionDialog({
             </label>
             <Input
               id="quantity"
+              className="font-mono"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               placeholder="0.00"
@@ -260,13 +261,15 @@ export function CreateTransactionDialog({
 
           <div className="grid gap-2">
             <label htmlFor="timestamp" className="text-sm font-medium">
-              Date & Time
+              Date
             </label>
             <Input
               id="timestamp"
-              type="datetime-local"
-              value={timestamp}
-              onChange={(e) => setTimestamp(e.target.value)}
+              type="date"
+              value={timestamp.slice(0, 10)}
+              onChange={(e) => {
+                setTimestamp(e.target.value);
+              }}
               required
             />
           </div>

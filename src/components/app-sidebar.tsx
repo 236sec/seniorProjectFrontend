@@ -1,6 +1,12 @@
 "use client";
 
-import { BookOpen, BotIcon, Settings2, SquareTerminal } from "lucide-react";
+import {
+  BookOpen,
+  BotIcon,
+  Settings2,
+  SquareTerminal,
+  Wallet,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
@@ -37,7 +43,7 @@ const data = {
     {
       title: "Wallet Inspector",
       url: "/wallet-inspector",
-      icon: Settings2,
+      icon: Wallet,
     },
     {
       title: "Indicators",

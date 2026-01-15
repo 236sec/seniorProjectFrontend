@@ -18,7 +18,7 @@ interface AggregatedTokenListProps {
 
 export function AggregatedTokenList({ tokens }: AggregatedTokenListProps) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 overflow-hidden">
       <div className="grid grid-cols-[1fr_100px_150px] px-4 text-sm font-medium text-muted-foreground">
         <div>Asset</div>
         <div>Symbol</div>
@@ -43,7 +43,7 @@ export function AggregatedTokenList({ tokens }: AggregatedTokenListProps) {
                   <div className="text-left uppercase text-muted-foreground">
                     {token.symbol}
                   </div>
-                  <div className="text-right font-mono font-bold">
+                  <div className="font-mono text-sm truncate">
                     {Utils.formatUnits(token.totalBalance.toString(), 18)}
                   </div>
                 </div>
@@ -136,7 +136,7 @@ export function AggregatedTokenList({ tokens }: AggregatedTokenListProps) {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Balance:</span>
-                        <span className="font-mono">
+                        <span className="font-mono font-medium">
                           {formatBalance(
                             token.portfolioPerformance.totalBalance
                           )}{" "}
