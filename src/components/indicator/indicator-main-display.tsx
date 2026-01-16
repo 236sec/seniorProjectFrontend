@@ -162,8 +162,8 @@ export function IndicatorMainDisplay({
       </div>
 
       <IndicatorPriceChart
-        title={`${selectedSameScaleIndicator.toUpperCase()} Over Time`}
-        line1Label={selectedSameScaleIndicator}
+        title={`${selectedDifferentScaleIndicator.toUpperCase()} Over Time`}
+        line1Label={selectedDifferentScaleIndicator}
         data1={differentScaleIndicatorData}
       />
     </div>

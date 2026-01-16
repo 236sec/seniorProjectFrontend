@@ -26,6 +26,7 @@ import {
 import { ToolApproval } from "@/components/ai/approval-tool";
 import { GeneralTool } from "@/components/ai/general-tool";
 import { WalletDropdown } from "@/components/ai/wallet-dropdown";
+import { Spinner } from "@/components/ui/spinner";
 import { GetUserResponse } from "@/constants/types/api/getUserTypes";
 import { MyTools, MyUIMessage } from "@/lib/ai/types";
 import { isApprovalTool } from "@/lib/ai/utils";
@@ -61,6 +62,10 @@ export default function ChatbotPage({ userData }: ChatbotPageProps) {
       transport: new DefaultChatTransport({
         api: "/api/chat/test",
       }),
+      onError: (error) => {
+        console.error("Chat error:", error);
+        alert("An error occurred: " + error.message);
+      },
     });
 
   useEffect(() => {
@@ -92,7 +97,7 @@ export default function ChatbotPage({ userData }: ChatbotPageProps) {
     <div className="h-full w-full flex flex-col">
       <Conversation>
         <ConversationContent>
-          {MOCK_MESSAGES.map((message) => (
+          {messages.map((message) => (
             <Message from={message.role} key={message.id}>
               <MessageContent>
                 {message.parts.map((part, i) => {
@@ -120,6 +125,7 @@ export default function ChatbotPage({ userData }: ChatbotPageProps) {
                     }
                   }
                 })}
+                {status === "submitted" && <Spinner />}
               </MessageContent>
             </Message>
           ))}
