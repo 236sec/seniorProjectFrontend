@@ -43,8 +43,19 @@ export function AggregatedTokenList({ tokens }: AggregatedTokenListProps) {
                   <div className="text-left uppercase text-muted-foreground">
                     {token.symbol}
                   </div>
-                  <div className="font-mono text-sm truncate">
-                    {Utils.formatUnits(token.totalBalance.toString(), 18)}
+                  <div>
+                    <div className="font-mono text-sm truncate">
+                      {Utils.formatUnits(token.totalBalance.toString(), 18)}
+                    </div>
+                    <div
+                      className={`font-mono text-sm ${
+                        token.pnlPercentage >= 0
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      {formatPercentage(token.pnlPercentage)}
+                    </div>
                   </div>
                 </div>
               </CollapsibleTrigger>
