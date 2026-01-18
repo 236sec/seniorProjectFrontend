@@ -30,7 +30,7 @@ export function AddressBalanceChecker() {
 
   const toggleChain = (chain: AlchemyChain) => {
     setSelectedChains((prev) =>
-      prev.includes(chain) ? prev.filter((c) => c !== chain) : [...prev, chain]
+      prev.includes(chain) ? prev.filter((c) => c !== chain) : [...prev, chain],
     );
   };
 
@@ -56,18 +56,18 @@ export function AddressBalanceChecker() {
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       if (!response.ok) {
         throw new Error(
-          `Failed to fetch balances with url: ${getBaseUrl()}/api/alchemy/balances/${address}`
+          `Failed to fetch balances with url: ${getBaseUrl()}/api/alchemy/balances/${address}`,
         );
       }
 
       const data: GetAddressBalancesResponse = await response.json();
       const filterd_data = data.balances.filter(
-        (token) => token.token !== null
+        (token) => token.token !== null,
       );
       setResult({
         ...data,
@@ -199,7 +199,8 @@ export function AddressBalanceChecker() {
                       {native.network}
                     </p>
                     <p className="text-lg font-bold">
-                      {parseFloat(native.balanceFormatted).toFixed(4)} ETH
+                      {parseFloat(native.balanceFormatted).toFixed(4)}{" "}
+                      {native.symbol.toUpperCase()}
                     </p>
                   </div>
                 ))}
@@ -265,7 +266,7 @@ export function AddressBalanceChecker() {
                           undefined,
                           {
                             maximumFractionDigits: 4,
-                          }
+                          },
                         )}
                       </div>
                     </div>

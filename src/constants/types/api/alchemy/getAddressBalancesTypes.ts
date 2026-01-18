@@ -8,6 +8,7 @@ export interface NativeBalanceData {
   network: string;
   balance: string;
   balanceFormatted: string;
+  symbol: string;
 }
 
 export interface TokenBalanceData {

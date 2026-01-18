@@ -14,6 +14,7 @@ interface BackendBalanceResponse {
     network: string;
     balance: string;
     balanceFormatted: string;
+    symbol: string;
   }>;
   balances: Array<{
     contractAddress: string;
@@ -44,7 +45,7 @@ interface BackendBalanceResponse {
  */
 export async function getAddressBalances(
   data: GetAddressBalancesParams,
-  ttl: number
+  ttl: number,
 ): Promise<GetAddressBalancesResponse | undefined> {
   try {
     const backendUrl = env.BACKEND_URL;
@@ -74,7 +75,7 @@ export async function getAddressBalances(
       };
     } else {
       console.error(
-        `Get address balances failed with status: ${response.status} ${response.statusText}`
+        `Get address balances failed with status: ${response.status} ${response.statusText}`,
       );
       const errorText = await response.text();
       console.error(`Error response: ${errorText}`);
