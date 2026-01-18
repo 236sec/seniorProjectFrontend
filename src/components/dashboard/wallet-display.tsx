@@ -16,6 +16,7 @@ import { BlockchainWalletList } from "./blockchain-wallet-list";
 import { CreateTransactionDialog } from "./create-transaction-dialog";
 import { ManualHoldingsList } from "./manual-holdings-list";
 import { PortfolioStats } from "./portfolio-summary";
+import { TokenAllocationPieChart } from "./token-allocation-pie-chart";
 
 interface WalletDisplayProps {
   walletData: GetWalletResponse | null;
@@ -71,7 +72,14 @@ export function WalletDisplay({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PortfolioStats summary={portfolioSummary} />
+            <div className="flex flex-col md:flex-row gap-6 mb-6">
+              <div className="flex-1">
+                <PortfolioStats summary={portfolioSummary} />
+              </div>
+              <div className="flex-1">
+                <TokenAllocationPieChart tokens={aggregatedTokens} />
+              </div>
+            </div>
             <AggregatedTokenList tokens={aggregatedTokens} />
           </CardContent>
         </Card>
