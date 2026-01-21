@@ -12,23 +12,26 @@ import {
   AVAILABLE_CHAINS,
   CHAIN_DISPLAY_NAMES,
 } from "@/constants/enum/AlchemyChain";
+import { RpcChain } from "@/constants/enum/RpcChain";
 import { GetAddressBalancesResponse } from "@/constants/types/api/alchemy/getAddressBalancesTypes";
 import { getBaseUrl } from "@/env";
 import { ChevronDown, Loader2, Search } from "lucide-react";
 import { useState } from "react";
+
+type SelectableChain = AlchemyChain | RpcChain;
 
 export function AddressBalanceChecker() {
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GetAddressBalancesResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedChains, setSelectedChains] = useState<AlchemyChain[]>([
+  const [selectedChains, setSelectedChains] = useState<SelectableChain[]>([
     AlchemyChain.ETHEREUM_SEPOLIA,
     AlchemyChain.OP_MAINNET,
   ]);
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
 
-  const toggleChain = (chain: AlchemyChain) => {
+  const toggleChain = (chain: SelectableChain) => {
     setSelectedChains((prev) =>
       prev.includes(chain) ? prev.filter((c) => c !== chain) : [...prev, chain],
     );

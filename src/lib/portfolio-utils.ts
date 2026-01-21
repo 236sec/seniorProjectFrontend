@@ -11,8 +11,8 @@ export interface AggregatedToken {
   image: string;
   totalBalance: bigint;
   portfolioPerformance?: PortfolioPerformance;
-  currentPrice: number;
-  priceChange24h: number | null;
+  currentPrice?: number;
+  priceChange24h?: number | null;
   currentValue: number;
   pnlAmount: number;
   pnlPercentage: number;
@@ -56,7 +56,7 @@ export function formatBalance(balance: string, decimals: number = 18): string {
  * @returns Array of aggregated tokens with calculated metrics
  */
 export function getAggregatedTokens(
-  walletData: GetWalletResponse
+  walletData: GetWalletResponse,
 ): AggregatedToken[] {
   const tokenMap = new Map<
     string,
@@ -91,7 +91,7 @@ export function getAggregatedTokens(
     } catch (e) {
       void e;
       console.error(
-        `Invalid balance for ${tokenDetails.symbol}: ${balanceRaw}`
+        `Invalid balance for ${tokenDetails.symbol}: ${balanceRaw}`,
       );
     }
   };
@@ -158,9 +158,9 @@ export function getAggregatedTokens(
     // Note: Assuming 18 decimals as per original code.
     // Ideally this should use token metadata decimals.
     const balanceNumber = parseFloat(
-      Utils.formatUnits(totalBalance.toString(), 18)
+      Utils.formatUnits(totalBalance.toString(), 18),
     );
-    const currentValue = balanceNumber * tokenDetails.currentPrice;
+    const currentValue = balanceNumber * (tokenDetails.currentPrice || 0);
 
     // PNL Logic
     const pnlAmount = currentValue + totalCashflow;
@@ -190,7 +190,7 @@ export function getAggregatedTokens(
  * @returns Portfolio summary with calculated metrics
  */
 export function calculatePortfolioSummary(
-  tokens: AggregatedToken[]
+  tokens: AggregatedToken[],
 ): PortfolioSummary {
   let totalCurrentValue = 0;
   let totalInvested = 0;
@@ -204,7 +204,7 @@ export function calculatePortfolioSummary(
 
     // Weight the 24h change by the token's value
     // Only include tokens with valid priceChange24h data
-    if (token.priceChange24h !== null) {
+    if (token.priceChange24h !== null && token.priceChange24h !== undefined) {
       weighted24hSum += token.currentValue * token.priceChange24h;
     }
   });
@@ -236,7 +236,7 @@ export function calculatePortfolioSummary(
  */
 export function calculatePnlAmount(
   totalCurrentValue: number,
-  totalInvested: number
+  totalInvested: number,
 ): number {
   return totalCurrentValue - totalInvested;
 }
@@ -249,7 +249,7 @@ export function calculatePnlAmount(
  */
 export function calculatePnlPercentage(
   totalCurrentValue: number,
-  totalInvested: number
+  totalInvested: number,
 ): number {
   return totalInvested > 0
     ? ((totalCurrentValue - totalInvested) / totalInvested) * 100
@@ -268,7 +268,7 @@ export function formatCurrency(
     minimumFractionDigits?: number;
     maximumFractionDigits?: number;
     showSign?: boolean;
-  }
+  },
 ): string {
   const {
     minimumFractionDigits = 2,

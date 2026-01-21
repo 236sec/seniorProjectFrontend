@@ -21,6 +21,7 @@ import {
   AVAILABLE_CHAINS,
   CHAIN_DISPLAY_NAMES,
 } from "@/constants/enum/AlchemyChain";
+import { RpcChain } from "@/constants/enum/RpcChain";
 import { CreateBatchTransactionsParams } from "@/constants/types/api/createBatchTransactionsTypes";
 import {
   TransactionEventType,
@@ -35,10 +36,12 @@ import { cn } from "@/lib/utils";
 import { Check, ChevronDown, Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
+type SelectableChain = AlchemyChain | RpcChain;
+
 interface SyncBlockchainWalletDialogProps {
   walletId: string;
   blockchainWalletId: string;
-  initChains?: AlchemyChain[];
+  initChains?: SelectableChain[];
   onSync?: (selectedTokens: ScannedToken[]) => void;
   onChangeSubmitting?: () => void;
 }
@@ -71,14 +74,14 @@ export function SyncBlockchainWalletDialog({
   const [loading, setLoading] = useState(false);
   const [scannedTokens, setScannedTokens] = useState<ScannedToken[]>([]);
   const [selectedTokenIndices, setSelectedTokenIndices] = useState<number[]>(
-    []
+    [],
   );
   const [isChangeSubmitting, setIsChangeSubmitting] = useState(false);
   const [uncheckedChains, setUncheckedChains] =
-    useState<AlchemyChain[]>(initChains);
+    useState<SelectableChain[]>(initChains);
   const [address, setAddress] = useState<string>("");
   const [selectedChains, setSelectedChains] =
-    useState<AlchemyChain[]>(initChains);
+    useState<SelectableChain[]>(initChains);
   const [chainSelectorOpen, setChainSelectorOpen] = useState(false);
 
   const updateBlockchainWalletChains = async () => {
@@ -89,7 +92,7 @@ export function SyncBlockchainWalletDialog({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ chains: selectedChains }),
-        }
+        },
       );
       setUncheckedChains(selectedChains);
 
@@ -158,7 +161,7 @@ export function SyncBlockchainWalletDialog({
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -207,7 +210,7 @@ export function SyncBlockchainWalletDialog({
 
   const toggleTokenSelection = (index: number) => {
     setSelectedTokenIndices((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
     );
   };
 
@@ -215,14 +218,14 @@ export function SyncBlockchainWalletDialog({
     setSelectedTokenIndices(checked ? scannedTokens.map((_, i) => i) : []);
   };
 
-  const toggleChain = (chain: AlchemyChain) => {
+  const toggleChain = (chain: SelectableChain) => {
     // If it's an initial chain, don't allow unchecking
     if (uncheckedChains.includes(chain)) {
       return;
     }
 
     setSelectedChains((prev) =>
-      prev.includes(chain) ? prev.filter((c) => c !== chain) : [...prev, chain]
+      prev.includes(chain) ? prev.filter((c) => c !== chain) : [...prev, chain],
     );
   };
 
@@ -334,7 +337,7 @@ export function SyncBlockchainWalletDialog({
                           className={cn(
                             "flex items-center p-2 hover:bg-muted/30 transition-colors",
                             selectedTokenIndices.includes(index) &&
-                              "bg-primary/5"
+                              "bg-primary/5",
                           )}
                         >
                           <input
@@ -390,7 +393,7 @@ export function SyncBlockchainWalletDialog({
                                     "text-[10px]",
                                     token.diff > 0
                                       ? "text-green-600"
-                                      : "text-red-500"
+                                      : "text-red-500",
                                   )}
                                 >
                                   {token.diff > 0 ? "+" : ""}
@@ -426,7 +429,7 @@ export function SyncBlockchainWalletDialog({
                   <ChevronDown
                     className={cn(
                       "h-4 w-4 transition-transform",
-                      chainSelectorOpen && "rotate-180"
+                      chainSelectorOpen && "rotate-180",
                     )}
                   />
                 </Button>
@@ -444,7 +447,7 @@ export function SyncBlockchainWalletDialog({
                           isSelected && "border-primary bg-primary/5",
                           isInitial
                             ? "opacity-75"
-                            : "cursor-pointer hover:bg-muted/50"
+                            : "cursor-pointer hover:bg-muted/50",
                         )}
                         onClick={() => !isInitial && toggleChain(chain)}
                         title={

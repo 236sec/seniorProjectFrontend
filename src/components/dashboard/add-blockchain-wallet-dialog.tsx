@@ -14,6 +14,7 @@ import {
   AVAILABLE_CHAINS,
   CHAIN_DISPLAY_NAMES,
 } from "@/constants/enum/AlchemyChain";
+import { RpcChain } from "@/constants/enum/RpcChain";
 import { getBaseUrl } from "@/env";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
@@ -24,6 +25,8 @@ interface AddBlockchainWalletDialogProps {
   onWalletAdded?: () => void;
 }
 
+type SelectableChain = AlchemyChain | RpcChain;
+
 export function AddBlockchainWalletDialog({
   walletId,
   onWalletAdded,
@@ -31,13 +34,13 @@ export function AddBlockchainWalletDialog({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState("");
-  const [selectedChains, setSelectedChains] = useState<AlchemyChain[]>([]);
+  const [selectedChains, setSelectedChains] = useState<SelectableChain[]>([]);
 
-  const toggleChain = (chainId: AlchemyChain) => {
+  const toggleChain = (chainId: SelectableChain) => {
     setSelectedChains((prev) =>
       prev.includes(chainId)
         ? prev.filter((id) => id !== chainId)
-        : [...prev, chainId]
+        : [...prev, chainId],
     );
   };
 
@@ -62,7 +65,7 @@ export function AddBlockchainWalletDialog({
             address,
             chains: selectedChains,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -83,7 +86,7 @@ export function AddBlockchainWalletDialog({
       alert(
         error instanceof Error
           ? error.message
-          : "Failed to add blockchain wallet"
+          : "Failed to add blockchain wallet",
       );
     } finally {
       setLoading(false);
@@ -124,7 +127,7 @@ export function AddBlockchainWalletDialog({
                   className={cn(
                     "flex items-center justify-between rounded-md border p-3 cursor-pointer transition-colors hover:bg-muted/50",
                     selectedChains.includes(chain) &&
-                      "border-primary bg-primary/5"
+                      "border-primary bg-primary/5",
                   )}
                   onClick={() => toggleChain(chain)}
                 >

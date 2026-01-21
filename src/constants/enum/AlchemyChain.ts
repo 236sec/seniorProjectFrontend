@@ -1,3 +1,5 @@
+import { RpcChain } from "./RpcChain";
+
 export enum AlchemyChain {
   // Mainnet chains
   ETHEREUM_MAINNET = "eth-mainnet",
@@ -15,7 +17,7 @@ export enum AlchemyChain {
   ETHEREUM_SEPOLIA = "eth-sepolia",
 }
 
-export const CHAIN_DISPLAY_NAMES: Record<AlchemyChain, string> = {
+export const CHAIN_DISPLAY_NAMES: Record<AlchemyChain | RpcChain, string> = {
   [AlchemyChain.ETHEREUM_MAINNET]: "Ethereum",
   [AlchemyChain.OP_MAINNET]: "Optimism",
   [AlchemyChain.POLYGON_POS_MAINNET]: "Polygon",
@@ -27,6 +29,10 @@ export const CHAIN_DISPLAY_NAMES: Record<AlchemyChain, string> = {
   [AlchemyChain.BERACHAIN_MAINNET]: "Berachain",
   [AlchemyChain.LINEA_MAINNET]: "Linea",
   [AlchemyChain.INK_MAINNET]: "Ink",
+  [RpcChain.BNB]: "BNB Chain (This chain impact performance)",
 };
 
-export const AVAILABLE_CHAINS = Object.values(AlchemyChain);
+export const AVAILABLE_CHAINS = [
+  ...Object.values(AlchemyChain),
+  ...Object.values(RpcChain),
+];

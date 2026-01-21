@@ -69,7 +69,7 @@ export function AggregatedTokenList({ tokens }: AggregatedTokenListProps) {
                         </span>
                         <span className="font-mono font-medium">
                           $
-                          {token.currentPrice.toLocaleString(undefined, {
+                          {token.currentPrice?.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 6,
                           })}
@@ -81,18 +81,20 @@ export function AggregatedTokenList({ tokens }: AggregatedTokenListProps) {
                         </span>
                         <span
                           className={`font-mono font-medium ${
+                            token.priceChange24h &&
                             token.priceChange24h !== null &&
                             token.priceChange24h >= 0
                               ? "text-green-600 dark:text-green-400"
                               : "text-red-600 dark:text-red-400"
                           }`}
                         >
-                          {token.priceChange24h !== null &&
+                          {token.priceChange24h &&
+                          token.priceChange24h !== null &&
                           token.priceChange24h >= 0
                             ? "+"
                             : ""}
                           {token.priceChange24h !== null
-                            ? token.priceChange24h.toFixed(2)
+                            ? token.priceChange24h?.toFixed(2)
                             : "N/A"}
                           %
                         </span>
@@ -149,7 +151,7 @@ export function AggregatedTokenList({ tokens }: AggregatedTokenListProps) {
                         <span className="text-muted-foreground">Balance:</span>
                         <span className="font-mono font-medium">
                           {formatBalance(
-                            token.portfolioPerformance.totalBalance
+                            token.portfolioPerformance.totalBalance,
                           )}{" "}
                           {token.symbol.toUpperCase()}
                         </span>
