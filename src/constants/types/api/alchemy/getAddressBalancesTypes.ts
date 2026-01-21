@@ -8,19 +8,7 @@ export interface NativeBalanceData {
   network: string;
   balance: string;
   balanceFormatted: string;
-  symbol: string;
-}
-
-export interface TokenBalanceData {
-  contractAddress: string;
-  symbol: string;
-  name: string;
-  balance: string;
-  balanceFormatted: string;
-  decimals: number | null;
-  logo: string | null;
-  network: string;
-  token?: {
+  token: {
     id: string;
     symbol: string;
     name: string;
@@ -29,7 +17,25 @@ export interface TokenBalanceData {
       small: string;
       large: string;
     };
-  } | null;
+  };
+}
+
+export interface TokenBalanceData {
+  contractAddress: string;
+  balance: string;
+  balanceFormatted: string;
+  decimals: number | null;
+  network: string;
+  token: {
+    id: string;
+    symbol: string;
+    name: string;
+    image: {
+      thumb: string;
+      small: string;
+      large: string;
+    };
+  };
 }
 
 export interface GetAddressBalancesResponse {

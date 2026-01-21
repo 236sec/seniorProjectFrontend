@@ -15,17 +15,7 @@ interface BackendBalanceResponse {
     balance: string;
     balanceFormatted: string;
     symbol: string;
-  }>;
-  balances: Array<{
-    contractAddress: string;
-    balance: string;
-    balanceFormatted: string;
-    symbol: string;
-    name: string;
-    logo: string | null;
-    decimals: number | null;
-    network: string;
-    token?: {
+    token: {
       id: string;
       symbol: string;
       name: string;
@@ -34,7 +24,24 @@ interface BackendBalanceResponse {
         small: string;
         large: string;
       };
-    } | null;
+    };
+  }>;
+  balances: Array<{
+    contractAddress: string;
+    balance: string;
+    balanceFormatted: string;
+    decimals: number | null;
+    network: string;
+    token: {
+      id: string;
+      symbol: string;
+      name: string;
+      image: {
+        thumb: string;
+        small: string;
+        large: string;
+      };
+    };
   }>;
   totalTokens: number;
   tokensWithMetadata: number;

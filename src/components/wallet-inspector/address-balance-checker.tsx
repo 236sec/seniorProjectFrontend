@@ -200,7 +200,7 @@ export function AddressBalanceChecker() {
                     </p>
                     <p className="text-lg font-bold">
                       {parseFloat(native.balanceFormatted).toFixed(4)}{" "}
-                      {native.symbol.toUpperCase()}
+                      {native.token.symbol.toUpperCase()}
                     </p>
                   </div>
                 ))}
@@ -236,27 +236,29 @@ export function AddressBalanceChecker() {
                     className="flex justify-between items-center p-2 hover:bg-muted/50 rounded-md border text-sm transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      {token.logo || token.token?.image ? (
+                      {token.token.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={token.logo || token.token?.image?.thumb || ""}
-                          alt={token.symbol}
+                          src={token.token?.image?.thumb || ""}
+                          alt={token.token.symbol}
                           className="w-6 h-6 rounded-full"
                         />
                       ) : (
                         <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold">
-                          {token.symbol.slice(0, 2)}
+                          {token.token.symbol.slice(0, 2)}
                         </div>
                       )}
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{token.name}</span>
+                          <span className="font-medium">
+                            {token.token.name}
+                          </span>
                           <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded">
                             {token.network}
                           </span>
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {token.symbol}
+                          {token.token.symbol}
                         </span>
                       </div>
                     </div>
