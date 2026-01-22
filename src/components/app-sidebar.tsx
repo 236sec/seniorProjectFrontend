@@ -51,6 +51,11 @@ const data = {
       icon: Settings2,
     },
     {
+      title: "Notifications",
+      url: "/notifications",
+      icon: BotIcon,
+    },
+    {
       title: "AI",
       url: "/ai",
       icon: BotIcon,

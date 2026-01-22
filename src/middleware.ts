@@ -28,8 +28,11 @@ export default auth((req) => {
     });
   }
 
-  const isProtectedRoute = nextUrl.pathname.startsWith("/dashboard");
   const isAIRoute = nextUrl.pathname.startsWith("/ai");
+  const isDashboardRoute = nextUrl.pathname.startsWith("/dashboard");
+  const isNotificationsRoute = nextUrl.pathname.startsWith("/notifications");
+  const isProtectedRoute =
+    isAIRoute || isDashboardRoute || isNotificationsRoute;
 
   if ((isProtectedRoute || isAIRoute) && !isLoggedIn) {
     return NextResponse.redirect(new URL("/", req.url));
@@ -42,11 +45,11 @@ export default auth((req) => {
     response.headers.set("Access-Control-Allow-Credentials", "true");
     response.headers.set(
       "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+      "GET, POST, PUT, DELETE, PATCH, OPTIONS",
     );
     response.headers.set(
       "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
+      "Content-Type, Authorization",
     );
   }
 

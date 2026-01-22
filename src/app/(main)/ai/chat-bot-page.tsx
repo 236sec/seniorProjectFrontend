@@ -60,7 +60,7 @@ export default function ChatbotPage({ userData }: ChatbotPageProps) {
       sendAutomaticallyWhen:
         lastAssistantMessageIsCompleteWithApprovalResponses,
       transport: new DefaultChatTransport({
-        api: "/api/chat/test",
+        api: "/api/chat",
       }),
       onError: (error) => {
         console.error("Chat error:", error);
