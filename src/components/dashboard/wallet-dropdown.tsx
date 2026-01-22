@@ -95,7 +95,11 @@ export function WalletDropdown({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-center">
+          <Button
+            variant="outline"
+            className="w-full justify-center"
+            suppressHydrationWarning
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add a Wallet
           </Button>
@@ -152,7 +156,11 @@ export function WalletDropdown({
       <Dialog open={open} onOpenChange={setOpen}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-full justify-between">
+            <Button
+              variant="outline"
+              className="w-full justify-between"
+              suppressHydrationWarning
+            >
               <div className="flex items-center gap-2">
                 <Wallet className="h-4 w-4" />
                 <div className="flex flex-col items-start">
