@@ -1,11 +1,15 @@
 "use client";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { TransactionHistory } from "@/components/dashboard/transaction-history";
 import { WalletDisplay } from "@/components/dashboard/wallet-display";
 import { WalletDropdown } from "@/components/dashboard/wallet-dropdown";
+import { Button } from "@/components/ui/button";
 import { GetUserResponse } from "@/constants/types/api/getUserTypes";
 import { GetWalletTransactionsResponse } from "@/constants/types/api/getWalletTransactionsTypes";
 import { GetWalletResponse } from "@/constants/types/api/getWalletTypes";
 import { getBaseUrl } from "@/env";
+import { Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
 interface DashboardProps {
@@ -19,7 +23,7 @@ async function fetchWalletData(id: string): Promise<GetWalletResponse> {
   if (!response.ok) {
     throw new Error(
       "Failed to fetch wallet data with url: " +
-        `${getBaseUrl()}/api/users/wallets/${id}`
+        `${getBaseUrl()}/api/users/wallets/${id}`,
     );
   }
 
@@ -27,6 +31,7 @@ async function fetchWalletData(id: string): Promise<GetWalletResponse> {
 }
 
 export function Dashboard({ userDataPromised, walletId }: DashboardProps) {
+  const router = useRouter();
   const userData = use(userDataPromised)!;
   const selectedWallet = walletId || null;
   const [walletData, setWalletData] = useState<GetWalletResponse | null>(null);
@@ -35,16 +40,48 @@ export function Dashboard({ userDataPromised, walletId }: DashboardProps) {
   const [loading, setLoading] = useState(false);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [isShowTransactions, setIsShowTransactions] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteWallet = async () => {
+    if (!selectedWallet) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(
+        `${getBaseUrl()}/api/wallets/${selectedWallet}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (response.ok) {
+        setIsDeleteDialogOpen(false);
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        const data = await response.json();
+        console.error(
+          "Failed to delete wallet:",
+          data.error || "Unknown error",
+        );
+      }
+    } catch (error) {
+      console.error("Error deleting wallet:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const fetchTransactions = async (
     walletId: string,
     limit = 10,
-    offset = 0
+    offset = 0,
   ) => {
     try {
       setTransactionsLoading(true);
       const response = await fetch(
-        `${getBaseUrl()}/api/wallets/transactions/${walletId}?limit=${limit}&offset=${offset}`
+        `${getBaseUrl()}/api/wallets/transactions/${walletId}?limit=${limit}&offset=${offset}`,
       );
       if (!response.ok) {
         throw new Error("Failed to fetch transactions");
@@ -96,6 +133,17 @@ export function Dashboard({ userDataPromised, walletId }: DashboardProps) {
                 selectedWallet={selectedWallet}
               />
             </div>
+            {selectedWallet && (
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                disabled={loading || isDeleting}
+                title="Delete Wallet"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
           <WalletDisplay
@@ -116,6 +164,16 @@ export function Dashboard({ userDataPromised, walletId }: DashboardProps) {
           )}
         </div>
       </div>
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Delete Wallet"
+        description="Are you sure you want to delete this wallet? This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={handleDeleteWallet}
+        isLoading={isDeleting}
+        variant="destructive"
+      />
     </div>
   );
 }
