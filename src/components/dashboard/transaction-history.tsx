@@ -102,7 +102,11 @@ export function TransactionHistory({
                                 {tx.tokenId.name}
                               </span>
                               <span className="text-xs text-muted-foreground">
-                                {tx.tokenId.symbol.toUpperCase()}
+                                {tx.tokenId.symbol.length > 5
+                                  ? tx.tokenId.symbol
+                                      .slice(0, 5)
+                                      .toUpperCase() + "..."
+                                  : tx.tokenId.symbol.toUpperCase()}
                               </span>
                             </div>
                           </div>

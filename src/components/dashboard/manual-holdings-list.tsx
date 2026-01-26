@@ -64,7 +64,9 @@ function TokenTable({
                 <span className="font-medium">{details.name}</span>
               </TableCell>
               <TableCell className="uppercase text-muted-foreground">
-                {details.symbol}
+                {details.symbol.length > 5
+                  ? details.symbol.slice(0, 5) + "..."
+                  : details.symbol}
               </TableCell>
               <TableCell className="text-right font-mono">
                 {formatBalance(token.balance)}

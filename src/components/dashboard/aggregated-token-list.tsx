@@ -41,7 +41,9 @@ export function AggregatedTokenList({ tokens }: AggregatedTokenListProps) {
                     <span className="font-medium">{token.name}</span>
                   </div>
                   <div className="text-left uppercase text-muted-foreground">
-                    {token.symbol}
+                    {token.symbol.length > 5
+                      ? token.symbol.slice(0, 5) + "..."
+                      : token.symbol}
                   </div>
                   <div>
                     <div className="font-mono text-sm truncate">
@@ -153,7 +155,9 @@ export function AggregatedTokenList({ tokens }: AggregatedTokenListProps) {
                           {formatBalance(
                             token.portfolioPerformance.totalBalance,
                           )}{" "}
-                          {token.symbol.toUpperCase()}
+                          {token.symbol.length > 5
+                            ? token.symbol.slice(0, 5).toUpperCase() + "..."
+                            : token.symbol.toUpperCase()}
                         </span>
                       </div>
                     </div>
