@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AvailableRanges } from "@/constants/types/api/tokens/getHistoricalPricesTypes";
 import { getHistoricalPrices } from "@/services/getHistoricalPrices";
 import { useEffect, useState } from "react";
 
@@ -35,10 +36,30 @@ enum TimeRange {
 }
 
 const TIME_RANGE_OPTIONS = [
-  { label: "Last 7 days", value: TimeRange.SEVEN_DAYS, days: 7 },
-  { label: "Last 30 days", value: TimeRange.THIRTY_DAYS, days: 30 },
-  { label: "Last 3 months", value: TimeRange.NINETY_DAYS, days: 90 },
-  { label: "Last 1 year", value: TimeRange.ONE_YEAR, days: 365 },
+  {
+    label: "Last 7 days",
+    value: TimeRange.SEVEN_DAYS,
+    days: 7,
+    rangeKey: "7d" as keyof AvailableRanges,
+  },
+  {
+    label: "Last 30 days",
+    value: TimeRange.THIRTY_DAYS,
+    days: 30,
+    rangeKey: "1m" as keyof AvailableRanges,
+  },
+  {
+    label: "Last 3 months",
+    value: TimeRange.NINETY_DAYS,
+    days: 90,
+    rangeKey: "3m" as keyof AvailableRanges,
+  },
+  {
+    label: "Last 1 year",
+    value: TimeRange.ONE_YEAR,
+    days: 365,
+    rangeKey: "1y" as keyof AvailableRanges,
+  },
 ] as const;
 
 export function ChartAreaInteractive({
@@ -49,6 +70,8 @@ export function ChartAreaInteractive({
   const [timeRange, setTimeRange] = useState<TimeRange>(TimeRange.SEVEN_DAYS);
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [availableRanges, setAvailableRanges] =
+    useState<AvailableRanges | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -56,7 +79,7 @@ export function ChartAreaInteractive({
     const fetchData = async () => {
       setLoading(true);
       const selectedOption = TIME_RANGE_OPTIONS.find(
-        (opt) => opt.value === timeRange
+        (opt) => opt.value === timeRange,
       );
       const days = selectedOption?.days || 30;
 
@@ -71,6 +94,7 @@ export function ChartAreaInteractive({
             volume: item.volume_24h,
           }));
           setChartData(formattedData);
+          setAvailableRanges(data.availableRanges);
         } else if (mounted) {
           setChartData([]);
         }
@@ -95,6 +119,7 @@ export function ChartAreaInteractive({
         coinId={coinId}
         timeRange={timeRange}
         onTimeRangeChange={setTimeRange}
+        availableRanges={availableRanges}
       />
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         {loading ? (
@@ -113,10 +138,12 @@ function ChartHeader({
   coinId,
   timeRange,
   onTimeRangeChange,
+  availableRanges,
 }: {
   coinId: string;
   timeRange: TimeRange;
   onTimeRangeChange: (value: TimeRange) => void;
+  availableRanges: AvailableRanges | null;
 }) {
   const selectedLabel =
     TIME_RANGE_OPTIONS.find((opt) => opt.value === timeRange)?.label ||
@@ -141,7 +168,9 @@ function ChartHeader({
           <SelectValue placeholder="Last 3 months" />
         </SelectTrigger>
         <SelectContent className="rounded-xl">
-          {TIME_RANGE_OPTIONS.map((option) => (
+          {TIME_RANGE_OPTIONS.filter((option) =>
+            availableRanges ? availableRanges[option.rangeKey] : true,
+          ).map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
