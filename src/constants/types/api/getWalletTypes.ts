@@ -40,11 +40,26 @@ export interface ManualTokenBalance {
   balance: string;
 }
 
+export interface BankWalletToken {
+  tokenId: string;
+  balance: string;
+}
+
+export interface BankWallet {
+  _id: string;
+  apiKey: string;
+  tokens: BankWalletToken[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PortfolioPerformance {
   tokenId: string;
   totalInvestedAmount: number;
   totalBalance: string;
   totalCashflowUsd: number;
+  costBasis: number;
+  averageUnitCost: number;
 }
 
 export interface Wallet {
@@ -53,6 +68,7 @@ export interface Wallet {
   name: string;
   description: string;
   blockchainWalletId: BlockchainWallet[];
+  bankWalletId: BankWallet[];
   manualTokens: ManualTokenBalance[];
   portfolioPerformance: PortfolioPerformance[];
   createdAt: string;
