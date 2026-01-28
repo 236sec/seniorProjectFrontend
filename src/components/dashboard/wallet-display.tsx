@@ -1,17 +1,18 @@
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GetWalletResponse } from "@/constants/types/api/getWalletTypes";
 import {
-  calculatePortfolioSummary,
-  getAggregatedTokens,
+    calculatePortfolioSummary,
+    getAggregatedTokens,
 } from "@/lib/portfolio-utils";
 import { AggregatedTokenList } from "./aggregated-token-list";
+import { BankWalletList } from "./bank-wallet-list";
 import { BlockchainWalletList } from "./blockchain-wallet-list";
 import { CreateTransactionDialog } from "./create-transaction-dialog";
 import { ManualHoldingsList } from "./manual-holdings-list";
@@ -87,6 +88,14 @@ export function WalletDisplay({
         {/* Blockchain Wallets Section */}
         <BlockchainWalletList
           wallets={walletData.wallet.blockchainWalletId}
+          walletId={walletData.wallet._id}
+          tokensMap={walletData.tokens}
+          refreshWalletData={refreshWalletData}
+        />
+
+        {/* Bank Wallets Section */}
+        <BankWalletList
+          wallets={walletData.wallet.bankWalletId || []}
           walletId={walletData.wallet._id}
           tokensMap={walletData.tokens}
           refreshWalletData={refreshWalletData}

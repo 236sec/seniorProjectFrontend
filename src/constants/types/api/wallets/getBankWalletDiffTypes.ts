@@ -14,6 +14,7 @@ export interface BankWalletDiffDetail {
   decimals: number | null;
   network: string;
   token: {
+    _id: string;
     id: string;
     symbol: string;
     name: string;
