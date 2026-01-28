@@ -1,6 +1,6 @@
 import {
-  GetWalletResponse,
-  PortfolioPerformance,
+    GetWalletResponse,
+    PortfolioPerformance,
 } from "@/constants/types/api/getWalletTypes";
 import { Utils } from "alchemy-sdk";
 
@@ -113,6 +113,19 @@ export function getAggregatedTokens(
       });
     }
   });
+
+  // 3. Process Bank Wallet Tokens
+  if (walletData.wallet.bankWalletId) {
+    walletData.wallet.bankWalletId.forEach((wallet) => {
+      if (wallet.tokens && Array.isArray(wallet.tokens)) {
+        wallet.tokens.forEach((token) => {
+          if (token.tokenId) {
+            addBalance(token.tokenId, token.balance);
+          }
+        });
+      }
+    });
+  }
 
   // 3. Process Portfolio Performance (Aggregate stats)
   if (walletData.wallet.portfolioPerformance) {
